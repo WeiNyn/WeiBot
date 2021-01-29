@@ -1,0 +1,291 @@
+actions_map:
+- intent: default
+  priority: 0
+  triggers:
+    - text:
+        - sorry I dont understand
+
+- intent: WorkTimesBreaches
+  set:
+    latest_question: WorkTimesBreaches
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+  triggers:
+    - slot:
+        working_type: office hours
+      text:
+        - WorkTimesBreaches office answer
+    - slot:
+        working_type: shift
+      text:
+        - WorkTimesBreaches shift answer
+    - request_slot: working_type
+
+- intent: WorkingTimeBreachDiscipline
+  set:
+    latest_question: WorkingTimeBreachDiscipline
+  triggers:
+    - text:
+      - WorkingTimeBreachDiscipline answer
+
+- intent: HolidaysOff
+  set:
+    latest_question: HolidaysOff
+  triggers:
+    - text:
+      - HolidaysOff answer
+
+- intent: AnnualLeaveApplicationProcess
+  set:
+    latest_question: AnnualLeaveApplicationProcess
+  triggers:
+    - text:
+        - AnnualLeaveApplicationProcess answer
+
+- intent: SetWorkingType
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+        shift_type: shift
+  triggers:
+    - slot:
+        working_type: yes
+      trigger_intent:
+        from_slot: latest_question
+    - text:
+        - Ok I will remember your working type
+
+- intent: WorkingHours
+  set:
+    latest_question: WorkingHours
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+        shift_type: shift
+  triggers:
+    - slot:
+        working_type: office hours
+      text:
+        - WorkingHours office
+    - slot:
+        working_type: shift
+        shift_type: day shift
+      text:
+        - WorkingHours day shift
+    - slot:
+        working_type: shift
+        shift_type: afternoon shift
+      text:
+        - WorkingHours afternoon shift
+    - slot:
+        working_type: shift
+        shift_type: night shift
+      text:
+        - WorkingHours night shift
+    - slot:
+        working_type: shift
+      request_slot: shift_type
+    - request_slot: working_type
+
+- intent: WorkingDay
+  set:
+    latest_question: WorkingDay
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+        shift_type: shift
+  triggers:
+    - slot:
+        working_type: office hours
+      text:
+        - WorkingDay office
+    - slot:
+        working_type: shift
+      text:
+        - WorkingDay shift
+    - request_slot: working_type
+
+- intent: BreakTime
+  set:
+    latest_question: BreakTime
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+        shift_type: shift
+  triggers:
+    - slot:
+        working_type: office hours
+      text:
+        - BreakTime office
+    - slot:
+        working_type: shift
+      text:
+        - BreakTime shift
+    - request_slot: working_type
+
+- intent: Pregnant
+  set:
+    latest_question: Pregnant
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+        shift_type: shift
+  triggers:
+    - slot:
+        working_type: office hours
+      text:
+        - Pregnant office
+    - slot:
+        working_type: shift
+      text:
+        - Pregnant shift
+    - request_slot: working_type
+
+- intent: AttendanceRecord
+  set:
+    latest_question: AttendanceRecord
+  triggers:
+    - text:
+        - AttendanceRecord answer
+
+- intent: LaborContract
+  set:
+    latest_question: LaborContract
+  triggers:
+    - text:
+        - LaborContract answer
+
+- intent: Recruitment
+  set:
+    latest_question: Recruitment
+  triggers:
+    - text:
+        - Recruitment answer
+
+- intent: SickLeave
+  set:
+    latest_question: SickLeave
+  triggers:
+    - text:
+        - SickLeave answer
+
+- intent: UnpaidLeave
+  set:
+    latest_question: UnpaidLeave
+  triggers:
+    - text:
+        - UnpaidLeave answer
+
+- intent: PaidLeaveForFamilyEvent
+  set:
+    latest_question: PaidLeaveForFamilyEvent
+  triggers:
+    - text:
+        - PaidLeaveForFamilyEvent answer
+
+- intent: UnusedAnnualLeave
+  set:
+    latest_question: UnusedAnnualLeave
+  triggers:
+    - text:
+        - UnusedAnnualLeave answer
+
+- intent: RegulatedAnnualLeave
+  set:
+    latest_question: RegulatedAnnualLeave
+  triggers:
+    - text:
+        - RegulatedAnnualLeave answer
+
+- intent: greet
+  priority: 0
+  triggers:
+    - slot:
+        start_session: yes
+      text:
+        - converasion started
+    - set_slot:
+        start_session: start
+      text:
+        - hi _user_
+
+- intent: goodbye
+  triggers:
+    - text:
+        - bye
+
+requests_map:
+  - slot: working_type
+    set_slot:
+      working_type:
+        from_entity:
+          working_type: yes
+          shift_type: shift
+    text:
+      - What is your working type?
+    redirect:
+      - slot:
+          working_type: yes
+        set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: latest_question
+      - intent:
+          priority: 0
+        text:
+          - What is your working type?
+      - intent:
+          priority: 1
+        set_slot:
+          request_slot: null
+          confirm_request:
+            from_intent: yes
+        request_slot: continue_confirmation
+
+  - slot: shift_type
+    set_slot:
+      shift_type:
+        from_entity:
+          shift_type: yes
+    text:
+      - What is your shift type?
+    redirect:
+      - slot:
+          shift_type: yes
+        set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: latest_question
+      - intent:
+          priority: 0
+        text:
+          - What is your shift type?
+      - intent:
+          priority: 1
+        set_slot:
+          request_slot: null
+          confirm_request:
+            from_intent: yes
+        request_slot: continue_confirmation
+
+  - slot: continue_confirmation
+    text:
+      - User did not answer my question, do you want to answer?
+    redirect:
+      - intent:
+          name: affirm
+        set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: latest_question
+      - set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: confirm_request

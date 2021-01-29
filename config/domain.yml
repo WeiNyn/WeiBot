@@ -1,0 +1,39 @@
+intents:
+  - WorkTimesBreaches
+  - WorkingTimeBreachDiscipline
+  - HolidaysOff
+  - AnnualLeaveApplicationProcess
+  - SetWorkingType
+  - TemporarySetWorkingType
+  - WorkingHours
+  - WorkingDay
+  - BreakTime
+  - Pregnant
+  - AttendanceRecord
+  - SelectShiftType
+  - LaborContract
+  - Recruitment
+  - SickLeave
+  - UnpaidLeave
+  - PaidLeaveForFamilyEvent
+  - UnusedAnnualLeave
+  - RegulatedAnnualLeave
+  - rating
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - default
+entities:
+  - working_type
+  - shift_type
+slots:
+  - request_slot
+  - working_type
+  - shift_type
+  - start_session
+  - confirm_request
+  - latest_question
+  - continue_confirmation
+  - confirm_request
+  - user
