@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional, List
 from parsers.condition import Condition, SlotCondition, EntityCondition, IntentCondition
-from parsers.event import Event, TextEvent, SetSlotEvent, RequestSlotEvent, TriggerIntentEvent, EventOutput
+from parsers.event import Event, TextEvent, SetSlotEvent, RequestSlotEvent, TriggerIntentEvent, EventOutput, ButtonEvent
 
 ConditionMap = {
     "slot": SlotCondition,
@@ -10,6 +10,7 @@ ConditionMap = {
 
 EventMap = {
     "text": TextEvent,
+    "button": ButtonEvent,
     "set_slot": SetSlotEvent,
     "request_slot": RequestSlotEvent,
     "trigger_intent": TriggerIntentEvent,
@@ -239,6 +240,7 @@ class RequestMap:
         slot = self.request_map.get("slot", None)
         set_slot = self.request_map.get("set_slot", None)
         text = self.request_map.get("text", None)
+        button = self.request_map.get("button", None)
         redirect = self.request_map.get("redirect", None)
 
         if not slot:
@@ -256,18 +258,18 @@ class RequestMap:
         if set_slot is not None:
             self.set_slot = SetSlotEvent(set_slot, entities_list, intents_list, slots_list)
 
-        if text is None:
-            raise ValueError(f"Text must be specified in request_map, at slot {slot}")
+        self.startup_condition = SlotCondition({
+            self.slot: False,
+            "request_slot": False
+        }, entities_list, intents_list, slots_list)
 
-        else:
-            self.startup_condition = SlotCondition({
-                self.slot: False,
-                "request_slot": False
-            }, entities_list, intents_list, slots_list)
+        self.startup_set_slot = SetSlotEvent(dict(request_slot=self.slot), intents_list, entities_list, slots_list)
 
+        if text is not None:
             self.text = TextEvent(text, entities_list, intents_list, slots_list)
 
-            self.startup_set_slot = SetSlotEvent(dict(request_slot=self.slot), intents_list, entities_list, slots_list)
+        elif button is not None:
+            self.button = ButtonEvent(button, intents_list, intents_list, slots_list)
 
         if redirect is None:
             raise ValueError(f"redirect should be defined in request_map (at {self.slot})")
@@ -288,7 +290,10 @@ class RequestMap:
         if self.set_slot:
             request_map["set_slot"] = self.set_slot.export()["set_slot"]
 
-        request_map["text"] = self.text.export()["text"]
+        if self.text:
+            request_map["text"] = self.text.export()["text"]
+        else:
+            request_map["button"] = self.button.export()["button"]
 
         request_map["redirect"] = [trigger.export() for trigger in self.triggers]
 
@@ -310,8 +315,12 @@ class RequestMap:
             events.append(set_slot)
 
         if self.startup_condition(intent, entities, slots) is True:
-            text_event = self.text(intent, entities, slots)
-            events.append(text_event)
+            if self.text:
+                text_event = self.text(intent, entities, slots)
+                events.append(text_event)
+            else:
+                button_event = self.button(intent, entities, slots)
+                events.append(button_event)
 
             set_slot_event = self.startup_set_slot(intent, entities, slots)
             events.append(set_slot_event)

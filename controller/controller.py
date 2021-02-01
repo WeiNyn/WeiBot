@@ -4,6 +4,8 @@ import sys
 sys.path.append(os.getcwd())
 
 from typing import Dict, List, Any
+import inquirer
+
 from parsers.flow_map import FlowMap
 from nlu_pipelines.DIETClassifier.src.models.wrapper import DIETClassifierWrapper as Wrapper
 
@@ -130,8 +132,18 @@ class UserChatState:
 
             if events.get("text", None) is not None:
                 self.loop_stack = 0
-                print("bot:", events.get("text"))
-                user_input = input()
+                text = [inquirer.Text("text", message=(events.get("text") + " - "))]
+
+                user_input = inquirer.prompt(text).get("text")
+
+                self.translate_user_input(user_input)
+
+            elif events.get("button", None) is not None:
+                self.loop_stack = 0
+                button = [inquirer.List("button", message=events.get("button").get("text"), choices=[button["text"] for button in events.get("button").get("button")])]
+
+                user_input = inquirer.prompt(button).get("button")
+
                 self.translate_user_input(user_input)
 
             if events.get("trigger_intent", None) is not None:

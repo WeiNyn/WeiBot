@@ -314,3 +314,66 @@ class TriggerIntentEvent(Event):
         ))
 
 
+class ActionEvent(Event):
+    def __init__(self, action: str, entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        self.action = action
+
+    def _check(self, entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        if not isinstance(self.action, str):
+            raise ValueError(f"Action must be a string, not {self.action}: {type(self.action)}")
+
+    def export(self):
+        return dict(
+            action=self.action
+        )
+
+    def __call__(self, intent: Dict[str, Any], entities: List[Dict[str, Any]], slots: Dict[str, Any]) -> EventOutput:
+        return EventOutput(dict(
+            action=self.action
+        ))
+
+
+class ButtonEvent(Event):
+    def __init__(self, button: Dict[str, Any], entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        self.button = button
+
+        self._check(entities_list, intents_list, slots_list)
+
+    def _check(self, entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        if not isinstance(self.button, dict):
+            raise ValueError(f"Button must be a dictionary, not {self.button}: {type(self.button)}")
+
+        text = self.button.get("text", None)
+        if not text:
+            raise ValueError(f"Button must have 'text' attribute, at {self.button}")
+
+        elif not isinstance(text, str):
+            raise ValueError(f"text in button must be a string, not {text}: {type(text)}")
+
+        button = self.button.get("button", None)
+        if not button:
+            raise ValueError(f"Button must have 'button' attribute, at {self.button}")
+
+        if not isinstance(button, list):
+            raise ValueError(f"button must be a list, not {button}: {type(button)}")
+
+        for b in button:
+            if not isinstance(b, dict):
+                raise ValueError(f"button component must be a list, not {b}: {type(b)}")
+
+            title = b.get("title", None)
+            text = b.get('text', None)
+
+            if not isinstance(title, str):
+                raise ValueError(f"title must be a string, not {title}: {type(title)}")
+
+            if not isinstance(text, str):
+                raise ValueError(f"text must be a string, not {text}: {type(text)}")
+
+    def export(self):
+        return dict(button=self.button)
+
+    def __call__(self, intent: Dict[str, Any], entities: List[Dict[str, Any]], slots: Dict[str, Any]) -> EventOutput:
+        return EventOutput(dict(
+            button=self.button
+        ))

@@ -228,8 +228,13 @@ requests_map:
         from_entity:
           working_type: yes
           shift_type: shift
-    text:
-      - What is your working type?
+    button:
+      text: What is your working type?
+      button:
+        - title: office hours
+          text: I work on office hours
+        - title: shift
+          text: I work on shift
     redirect:
       - slot:
           working_type: yes
@@ -239,8 +244,13 @@ requests_map:
           from_slot: latest_question
       - intent:
           priority: 0
-        text:
-          - What is your working type?
+        button:
+          text: What is your working type?
+          button:
+            - title: office hours
+              text: I work on office hours
+            - title: shift
+              text: I work on shift
       - intent:
           priority: 1
         set_slot:
@@ -254,8 +264,15 @@ requests_map:
       shift_type:
         from_entity:
           shift_type: yes
-    text:
-      - What is your shift type?
+    button:
+      text: What is your shift type?
+      button:
+        - title: day shift
+          text: day shift
+        - title: afternoon shift
+          text: afternoon shift
+        - title: night shift
+          text: night shift
     redirect:
       - slot:
           shift_type: yes
@@ -265,8 +282,15 @@ requests_map:
           from_slot: latest_question
       - intent:
           priority: 0
-        text:
-          - What is your shift type?
+        button:
+          text: What is your shift type?
+          button:
+            - title: day shift
+              text: day shift
+            - title: afternoon shift
+              text: afternoon shift
+            - title: night shift
+              text: night shift
       - intent:
           priority: 1
         set_slot:
