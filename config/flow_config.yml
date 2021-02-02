@@ -2,8 +2,7 @@ actions_map:
 - intent: default
   priority: 0
   triggers:
-    - text:
-        - sorry I dont understand
+    - action: default
 
 - intent: WorkTimesBreaches
   set:
@@ -232,9 +231,11 @@ requests_map:
       text: What is your working type?
       button:
         - title: office hours
-          text: I work on office hours
+          set_slot:
+            working_type: office hours
         - title: shift
-          text: I work on shift
+          set_slot:
+            working_type: shift
     redirect:
       - slot:
           working_type: yes
@@ -248,9 +249,11 @@ requests_map:
           text: What is your working type?
           button:
             - title: office hours
-              text: I work on office hours
+              set_slot:
+                working_type: office hours
             - title: shift
-              text: I work on shift
+              set_slot:
+                working_type: shift
       - intent:
           priority: 1
         set_slot:
@@ -268,11 +271,14 @@ requests_map:
       text: What is your shift type?
       button:
         - title: day shift
-          text: day shift
+          set_slot:
+            shift_type: day shift
         - title: afternoon shift
-          text: afternoon shift
+          set_slot:
+            shift_type: afternoon shift
         - title: night shift
-          text: night shift
+          set_slot:
+            shift_type: night shift
     redirect:
       - slot:
           shift_type: yes
@@ -286,11 +292,14 @@ requests_map:
           text: What is your shift type?
           button:
             - title: day shift
-              text: day shift
+              set_slot:
+                shift_type: day shift
             - title: afternoon shift
-              text: afternoon shift
+              set_slot:
+                shift_type: afternoon shift
             - title: night shift
-              text: night shift
+              set_slot:
+                shift_type: night shift
       - intent:
           priority: 1
         set_slot:

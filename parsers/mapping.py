@@ -1,6 +1,6 @@
 from typing import Dict, Any, Optional, List
 from parsers.condition import Condition, SlotCondition, EntityCondition, IntentCondition
-from parsers.event import Event, TextEvent, SetSlotEvent, RequestSlotEvent, TriggerIntentEvent, EventOutput, ButtonEvent
+from parsers.event import Event, TextEvent, SetSlotEvent, RequestSlotEvent, TriggerIntentEvent, EventOutput, ButtonEvent, ActionEvent
 
 ConditionMap = {
     "slot": SlotCondition,
@@ -11,6 +11,7 @@ ConditionMap = {
 EventMap = {
     "text": TextEvent,
     "button": ButtonEvent,
+    "action": ActionEvent,
     "set_slot": SetSlotEvent,
     "request_slot": RequestSlotEvent,
     "trigger_intent": TriggerIntentEvent,

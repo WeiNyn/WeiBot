@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 from random import randint
 import re
 
@@ -333,8 +333,90 @@ class ActionEvent(Event):
         ))
 
 
+class ButtonTrigger:
+    """
+    Trigger class that content condition and event for action_map and request_map
+    """
+    def __init__(self, trigger: Dict[str, Any], entities_list: List[str], intents_list: List[str],
+                 slots_list: List[str]):
+        """
+        Create triggers
+        :param trigger: dict() that contains events
+        :param entities_list: list of available entities
+        :param intents_list: list of available intents
+        :param slots_list: list of available slots
+        """
+        self.trigger = trigger
+        self.event: List[Event] = []
+        self._check(entities_list, intents_list, slots_list)
+
+    def _check(self, entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        """
+        Validate given triggers and create all needed attributes.
+        :param entities_list: list of available entities
+        :param intents_list: list of available intents
+        :param slots_list: list of available slots
+        :return: None
+        """
+        if not isinstance(self.trigger, dict):
+            raise ValueError(f"trigger must be an dictionary, not {self.trigger}: {type(self.trigger)}")
+
+        for key, value in self.trigger.items():
+            if key == "text":
+                self.event.append(TextEvent(value, entities_list, intents_list, slots_list))
+
+            elif key == "set_slot":
+                self.event.append(SetSlotEvent(value, entities_list, intents_list, slots_list))
+
+            elif key == "trigger_intent":
+                self.event.append(TriggerIntentEvent(value, entities_list, intents_list, slots_list))
+
+            else:
+                raise ValueError(f"Only support text, trigger_intent and set_slot event, not {key}: {value}")
+
+        if len(self.event) == 0:
+            raise ValueError(f"At least one event must be specified, at {self.trigger}")
+
+    def export(self):
+        """
+        export to the convertible dictionary
+        :return: dict() that can be converted to current trigger
+        """
+        trigger = dict()
+
+        for event in self.event:
+            trigger.update(event.export())
+
+        return trigger
+
+    def __call__(self, intent: Dict[str, Any], entities: List[Dict[str, Any]], slots: Dict[str, Any]) -> Optional[EventOutput]:
+        """
+        Process the current conversation to give the event output
+        :param intent: dict(name, intent_ranking, priority) - current intent of user message
+        :param entities: list(dict(entity_name, text, ...) - current entities in user message
+        :param slots: dict(slots_name) - current slots of conversation
+        :return: EventOutput - event base on the current conversation
+        """
+        events = EventOutput({})
+
+        for event in self.event:
+            events.append(event(intent, entities, slots))
+
+        return events
+
+
 class ButtonEvent(Event):
+    """
+    Event that return an form for user
+    """
     def __init__(self, button: Dict[str, Any], entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        """
+        Create button event with given button
+        :param button: dict() - button configuration
+        :param entities_list: list of available entities
+        :param intents_list: list of available intents
+        :param slots_list: list of available slots
+        """
         self.button = button
 
         self._check(entities_list, intents_list, slots_list)
@@ -357,23 +439,29 @@ class ButtonEvent(Event):
         if not isinstance(button, list):
             raise ValueError(f"button must be a list, not {button}: {type(button)}")
 
+        self.events_map: Dict[str, ButtonTrigger] = dict()
         for b in button:
             if not isinstance(b, dict):
                 raise ValueError(f"button component must be a list, not {b}: {type(b)}")
 
             title = b.get("title", None)
-            text = b.get('text', None)
 
             if not isinstance(title, str):
                 raise ValueError(f"title must be a string, not {title}: {type(title)}")
 
-            if not isinstance(text, str):
-                raise ValueError(f"text must be a string, not {text}: {type(text)}")
+            for key, value in b.items():
+                if key not in ["title", "text", "set_slot", "trigger_intent"]:
+                    raise ValueError(f"Button only support 'text', 'set_slot', and 'trigger_intent' not {key}")
+
+            self.events_map[title] = ButtonTrigger({k: v for k, v in b.items() if k != "title"}, entities_list, intents_list, slots_list)
 
     def export(self):
         return dict(button=self.button)
 
     def __call__(self, intent: Dict[str, Any], entities: List[Dict[str, Any]], slots: Dict[str, Any]) -> EventOutput:
         return EventOutput(dict(
-            button=self.button
+            button=dict(
+                text=self.button["text"],
+                events_map=self.events_map
+            )
         ))

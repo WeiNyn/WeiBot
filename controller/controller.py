@@ -3,11 +3,11 @@ import sys
 
 sys.path.append(os.getcwd())
 
-from typing import Dict, List, Any
 import inquirer
 
 from parsers.flow_map import FlowMap
 from nlu_pipelines.DIETClassifier.src.models.wrapper import DIETClassifierWrapper as Wrapper
+from actions.defined_actions import *
 
 
 class UserChatState:
@@ -19,7 +19,8 @@ class UserChatState:
                  user_id: str, version: str,
                  intent: Dict[str, Any] = None,
                  entities: List[Dict[str, Any]] = None,
-                 slots: Dict[str, Any] = None):
+                 slots: Dict[str, Any] = None,
+                 base_action_class=BaseActionClass):
         """
         Create user_chat_state
         :param nlu: DIETClassifierWrapper object
@@ -29,6 +30,7 @@ class UserChatState:
         :param intent: dict(name, intent_ranking, priority) - latest intent of user
         :param entities: list(dict(entity_name, text, ...) - latest entities of user message
         :param slots: dict(slots_name) - dictionary of current conversation's slots
+        :param base_action_class: Class - the name of BaseActionClass for custom action.
         """
         self.nlu = nlu
         self.flow_map = flow_map
@@ -40,9 +42,20 @@ class UserChatState:
         self.entities = [] if not entities else entities
         self.slots = dict() if not slots else slots
 
+        self._create_action_dict(base_action_class)
+
         self._check()
 
         self.loop_stack = 0
+
+    def _create_action_dict(self, base_action_class):
+        g = globals().copy()
+        action_classes = [cls.__name__ for cls in base_action_class.__subclasses__()]
+        action_objects = [g[class_name](self.flow_map.entities_list, self.flow_map.intents_list, self.flow_map.slots_list) for class_name in action_classes]
+
+        self.action_dict = {
+            cls.name(): cls for cls in action_objects
+        }
 
     def _check(self):
         """
@@ -127,6 +140,12 @@ class UserChatState:
             if self.loop_stack > 10:
                 break
 
+            if events.get("action", None) is not None:
+                target_action = self.action_dict[events.get("action")]
+                events = target_action(self.intent, self.entities, self.slots).__dict__
+
+                continue
+
             if events.get("set_slot", None) is not None:
                 self.slots.update(events.get("set_slot"))
 
@@ -140,11 +159,17 @@ class UserChatState:
 
             elif events.get("button", None) is not None:
                 self.loop_stack = 0
-                button = [inquirer.List("button", message=events.get("button").get("text"), choices=[button["text"] for button in events.get("button").get("button")])]
 
-                user_input = inquirer.prompt(button).get("button")
+                text = events.get("button").get("text")
+                events_map = events.get("button").get("events_map")
 
-                self.translate_user_input(user_input)
+                button = [inquirer.List("button", message=text,
+                                        choices=[key for key in events_map.keys()])]
+
+                event = events_map[inquirer.prompt(button).get("button")]
+
+                events = event(self.intent, self.entities, self.slots).__dict__
+                continue
 
             if events.get("trigger_intent", None) is not None:
                 self.loop_stack += 1
