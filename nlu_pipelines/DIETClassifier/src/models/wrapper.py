@@ -30,7 +30,7 @@ class DIETClassifierWrapper:
             except Exception as ex:
                 raise RuntimeError(f"Cannot read config file from {config}: {ex}")
             self.config_file_path = config
-            config = yaml.load(f)
+            config = yaml.load(f, Loader=yaml.FullLoader)
 
         self.config = config
         self.util_config = config.get("util", None)
