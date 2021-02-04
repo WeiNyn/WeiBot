@@ -105,7 +105,7 @@ class UserChatState:
         self.intent = intent
         self.entities = entities
 
-    def handle_flow(self, trigger_intent: str = None, request_slot: str = None):
+    def handle_flow(self, trigger_intent: str = None, request_slot: str = None) -> EventOutput:
         """
         Handle the conversation based on give event, if not trigger_intent or request_slot event raised, pass nothing to the function
         :param trigger_intent: str - the name of triggered intent
