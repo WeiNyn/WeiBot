@@ -24,6 +24,7 @@ intents:
   - affirm
   - deny
   - default
+  - restart
 entities:
   - working_type
   - shift_type

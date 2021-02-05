@@ -1,0 +1,160 @@
+actions_map:
+- intent: default
+  priority: 0
+  triggers:
+    - action: default
+
+- intent: restart
+  triggers:
+    - action: restart
+
+
+- intent: SetWorkingType
+  set_slot:
+    working_type:
+      from_entity:
+        working_type: yes
+        shift_type: shift
+  triggers:
+    - slot:
+        working_type: yes
+      trigger_intent:
+        from_slot: latest_question
+    - text:
+        - Ok I will remember your working type
+
+- intent: greet
+  priority: 0
+  triggers:
+    - slot:
+        start_session: yes
+      text:
+        - converasion started
+    - set_slot:
+        start_session: start
+      text:
+        - hi __user__
+
+- intent: goodbye
+  triggers:
+    - text:
+        - bye
+
+requests_map:
+  - slot: working_type
+    set_slot:
+      working_type:
+        from_entity:
+          working_type: yes
+          shift_type: shift
+    button:
+      text: What is your working type?
+      button:
+        - title: office hours
+          synonym:
+            - office
+          set_slot:
+            working_type: office hours
+        - title: shift
+          set_slot:
+            working_type: shift
+    redirect:
+      - slot:
+          working_type: yes
+        set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: latest_question
+      - intent:
+          priority: 0
+        button:
+          text: What is your working type?
+          button:
+            - title: office hours
+              synonym:
+                - office
+              set_slot:
+                working_type: office hours
+            - title: shift
+              set_slot:
+                working_type: shift
+      - intent:
+          priority: 1
+        set_slot:
+          request_slot: null
+          confirm_request:
+            from_intent: yes
+        request_slot: continue_confirmation
+
+  - slot: shift_type
+    set_slot:
+      shift_type:
+        from_entity:
+          shift_type: yes
+    button:
+      text: What is your shift type?
+      button:
+        - title: day shift
+          synonym:
+            - day
+          set_slot:
+            shift_type: day shift
+        - title: afternoon shift
+          synonym:
+            - afternoon
+          set_slot:
+            shift_type: afternoon shift
+        - title: night shift
+          synonym:
+            - night
+          set_slot:
+            shift_type: night shift
+    redirect:
+      - slot:
+          shift_type: yes
+        set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: latest_question
+      - intent:
+          priority: 0
+        button:
+          text: What is your shift type?
+          button:
+            - title: day shift
+              synonym:
+                - day
+              set_slot:
+                shift_type: day shift
+            - title: afternoon shift
+              synonym:
+                - afternoon
+              set_slot:
+                shift_type: afternoon shift
+            - title: night shift
+              synonym:
+                - night
+              set_slot:
+                shift_type: night shift
+      - intent:
+          priority: 1
+        set_slot:
+          request_slot: null
+          confirm_request:
+            from_intent: yes
+        request_slot: continue_confirmation
+
+  - slot: continue_confirmation
+    text:
+      - User did not answer my question, do you want to answer?
+    redirect:
+      - intent:
+          name: affirm
+        set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: latest_question
+      - set_slot:
+          request_slot: null
+        trigger_intent:
+          from_slot: confirm_request
