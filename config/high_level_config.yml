@@ -1,0 +1,144 @@
+intents_map:
+  - intent: WorkTimesBreaches
+    working_type:
+      office hours: |
+        **Late-in** means check-in time is within 90 mins after start time in the morning; or after start time in the afternoon in case of half-day off in the morning
+        **Early-out** means check-out time is within 90 mins before finish time in the afternoon; or before finish time in the morning in case of half-day off in the afternoon
+        **Late-in/Early-out** is considered half-day off if the _Late-in check-in time_ or _Early-out check-out time_ exceed the regulated mentioned number of minutes
+      shift: |
+        **Late-in** means check-in time is within 30 mins after start time of the first half-shift; or after the start time of the second half-shift in case of first half-shift off
+        **Early-out** means check-out time is within 30 mins before finish time of the second half-shift; or before the finish time of the fisrt half-shift in case of second half-shift off
+        **Late-in/Early-out** is considered half-shift off if the _Late-in check-in time_ or _Early-out check-out time_ exceed the regulated mentioned number of minutes
+
+  - intent: WorkingHours
+    working_type:
+      office hours: |
+        Employee will work from 8:30 to 17:30 in a day (Mon - Fri).
+      shift:
+        day shift: |
+          **DAY SHIFT (SHIFT 1)**
+          Shift 1A: (06h00 - 14h00)
+            - _(Work shift with 08 consecutive hours/day, 30 mins break included in working hours)_
+          Shift 1B: (07h00 - 14h00)
+            - _(Work shift with 07 consecutive hours/day, 30 mins break included in working hours)_
+          Shift 1C: (07h00 - 16h00)
+            - _(Work shift with 08 working hours/day, rotary 01-hour break among employees from [11h00 - 12h00] or [12h00 - 13h00] excluded from working hours)_
+
+        afternoon shift: |
+          **AFTERNOON SHIFT (SHIFT 2)**
+          Shift 2A: (14h00 - 22h00)
+            - _(Work shift with 8 consecutive hours/day, 30 mins break included in working hours)_
+          Shift 2B: (14h00 - 21h00)
+            - _(Work shift with 7 consecutive hours/day, 30 mins break included in working hours)_
+          Shift 2C: (12h00 - 21h00)
+            - _(Work shift with 08 working hours/day, rotary 01-hour break among employees from [16h30 - 17h30] or [17h30 - 18h30] excluded from working hours)_
+
+        night shift: |
+          **NIGHT SHIFT (SHIFT 3)**
+          Shift 3A: (Night shift) (22h00 - 06h00)
+            - _(Work shift with 8 consecutive hours/day, 45 mins break included in working hours)_
+
+  - intent: WorkingDay
+    working_type:
+      office hours: |
+        You must work 5 days a week, from Monday to Friday
+      shift: |
+        Based on your allocated work shifts each month
+
+  - intent: WorkingTimeBreachDiscipline
+    text: |
+      The allowable frequency for both _Late-in_ and _Early-out_ is 2 times per month. Every 03 breaches in a month will be deducted 1/2 day from annual leave
+        - Employee must guarantee the total remaining work time of each half-day/shift not less than 02 hours if _Late-in/Early-out_ in case of half-day work. Each breach will be deducted 1/2 day from annual leave
+        - _Late-in/Early-out_ is considered half-day/half-shift off if the _Late-in check-in time_ or _Early-out check-out time_ exceed the regulated mentioned number of minutes. Therefore, 1/2 day of annual leave will be deducted for each case
+        - _Late-in_ and _Early-out_ happen in a day is counted as 02 breaches
+        - In case of many breaches incurred in the same half-day, if annual leave deduction is applied for one breach, the other ones will not be counted. Maximum 0.5 day of annual leave will be deducted for this half-day
+
+  - intent: HolidaysOff
+    text: |
+      1. Calendar New Year Holiday: 01 day (Lunar calendar, 01st Jan);
+      2. Lunar New Year Holidays: 05 days (Lunar calendar, following Government's schedule)
+      3. Reunification Day: 01 day (30th Apr)
+      4. International Labor Day: 01 day (01st May)
+      5. National Day: 01 day (02nd Sep + 01 day before/ after holiday following Government's schedule (*)
+      6. Hung King Anniversary: 01 day (Lunar calendar, 10th Mar)
+      (*) Effective from 01 Jan 2021
+      (*) For employees working on office-hours
+        Employee who works on office hours are entitled to the paid days off on holidays
+      (*) For employees working on shifts
+        Employees on shifts are required working on work shift as normal on holidays according to team lead's arrangement
+        Employees on shift who are in probation period are entitled to the paid days off on holidays. However, employees have to work on these days if required
+
+  - intent: AnnualLeaveApplicationProcess
+    text: |
+      Employees are required to follow the application procedure for annual leave as below:
+        1 - Apply leave request for annual leave via internal system of the company (Blueprint), which must be approved by 02 approval levels before taking day-off
+        2 - In case of short-term leave (from 1 to 2 working days), employees need to apply leave request at least 01 working-day in advance
+        3 - In case of long-term leave (more than 2 working days), employees need to apply leave request at least 05 working-day in advance
+        4 - In case of force majeure, employees need to notify project leader and register _leave request_ on the first day back to work
+        (*) The valid approved annual leave following the mentioned procedure is paid leave
+      Based on the consideration of specific situation, invalid day-off is treated as unpaid leave; therefore, annual leave will not be deducted in this case
+
+  - intent: BreakTime
+    working_type:
+      office hours: |
+        Lunch time from 12:00 to 13:00 every working days
+      shift: |
+        You have 30 mins break included in the working hours
+
+  - intent: Pregnant
+    working_type:
+      office hours: |
+        General employee - Female employees who are pregnant from 7th month or have children under one year old can work 7 hours/day, per 5 days/week from 8:30 to 16:30.
+      shift: |
+        Pregnant employees that work on shift will be arranged according to the situation.
+
+  - intent: AttendanceRecord
+    text: All employees are required to daily check in/out when coming or leaving the office. Attendance data is recorded and followed up by the company management system (Blueprint)
+
+  - intent: LaborContract
+    text: |
+      Those employees who pass the probation period can sign the official labor contract following orders below:
+      Time 01: Definite labor contract (12 months)
+      Time 02: Continue with indefinite labor contract; however, in case of necessity, the Company can consider for another 12-month definite labor contract before the indefinite labor contract depending on particular situation
+      For employee as other citizen working in Vietnam. The two Parties agree to sign many definite-term labor contracts provided that the term of the labor contract does not exceed the term of the work permit
+
+  - intent: Recruitment
+    text: |
+      (*) Employees working at the Company have to follow through the recruitment process; and the approval result shall be based on individual capability, professional major and experience specifically required for each particular job title / position
+      (*) Employees are required to submit personal documents upon working at the company, items included:
+        - Resume / CV
+        - Personal profile (notorized)
+        - Copied resident book and ID card (notorized)
+        - Copied transcript and qualifications (if any)
+        - 3x4 picture (2 pieces)
+
+  - intent: SickLeave
+    text: |
+      (*) In case of sudden leave of absence for sickness or risk of accident, employee or employee' family (understood as Father / Mother / Husband / Wife / Sibling) must inform HR department or line manager at the earliest. After the sick leave period, employee has to submit sick leave request with Certificates of Paid Leaves covered by the Social Insurance scheme (C65-HD) signed and stamped by doctor
+      (*) Sick leave is counted as unpaid leave. During the sick leave period following doctor's description/instruction, contracted employee shall be covered by the policy of Social Insurance
+
+  - intent: UnpaidLeave
+    text: |
+      (*) Employee can ONLY apply for maximum 05 unpaid days of leave per year if all of issued annual leave has been used up in the year. The application has to be approved by all approval levels
+      (*) If the number of applied unpaid days of leave exceeds the mentioned limit above, employee has to clearly explain the reason to HR department and present all the related documents (upon request) to be used as proof for consideration and approval
+
+  - intent: PaidLeaveForFamilyEvent
+    text: |
+      1 - Marriage: 03 days off
+      2 - Son/daughter's marriage: 01 day off
+      3 - Death of parents (including parents in law), husband or wife or children 03 days off
+      4 - Death of grandparents: 01 day off
+
+  - intent: UnusedAnnualLeave
+    text: |
+      (*) The number of unused annual leave of year shall be carried forward to use until 31st Dec of next year
+      (*) However, employees, who work on shift and don't use up all annual leave in a year due to job nature and requirement, shall be paid for unused annual leave. The paid amount is 100% of current salary and settled with salary transfer in Dec of the year
+
+  - intent: RegulatedAnnualLeave
+    text: |
+      Regulated annual leave of the year for each type of employee:
+        [1] Employee as Vietnamese citizen: 12 days
+        [2] Employee as Korean citizen: 12 days
+        [3] Employee as other country citizen: 18 days
+          - Annual leave can be used after signing labor contract
+          - 01 extra annual leave for every 03 years working consecutively at the company counted from the start date
