@@ -39,7 +39,8 @@ class ChatStateDB:
                 events text,
                 button text,
                 loop_stack int(10),
-                response text)
+                response text,
+                synonym_dict text)
                 """
 
         try:
@@ -68,17 +69,20 @@ class ChatStateDB:
         return dict_as_string
 
     def dump_data(self, intent: Dict[str, Any], entities: List[Dict[str, Any]], slots: Dict[str, Any],
-                  events: Dict[str, Any], button: Dict[str, Any], response: Dict[str, Any]) -> Tuple:
+                  events: Dict[str, Any], button: Dict[str, Any], response: Dict[str, Any],
+                  synonym_dict: Dict[str, Any]) -> Tuple:
         return (
             self.convert_dict(json.dumps(intent), dictionary=self.replace_dict()),
             self.convert_dict(json.dumps(entities), dictionary=self.replace_dict()),
             self.convert_dict(json.dumps(slots), dictionary=self.replace_dict()),
             self.convert_dict(json.dumps(events), dictionary=self.replace_dict()),
             None if not button else self.convert_dict(json.dumps(button), dictionary=self.replace_dict()),
-            None if not response else self.convert_dict(json.dumps(response), dictionary=self.replace_dict())
+            None if not response else self.convert_dict(json.dumps(response), dictionary=self.replace_dict()),
+            None if not synonym_dict else self.convert_dict(json.dumps(synonym_dict), dictionary=self.replace_dict())
         )
 
-    def load_data(self, intent: str, entities: str, slots: str, events: str, button: str, response: str) -> Tuple:
+    def load_data(self, intent: str, entities: str, slots: str, events: str, button: str, response: str,
+                  synonym_dict: str) -> Tuple:
         return (
             json.loads(self.convert_dict(intent, dictionary=self.revert_replace_dict())),
             json.loads(self.convert_dict(entities, dictionary=self.revert_replace_dict())),
@@ -86,11 +90,13 @@ class ChatStateDB:
             json.loads(self.convert_dict(events, dictionary=self.revert_replace_dict())),
             None if not button else json.loads(self.convert_dict(button, dictionary=self.revert_replace_dict())),
             None if not response else json.loads(self.convert_dict(response, dictionary=self.revert_replace_dict())),
+            None if not synonym_dict else json.loads(
+                self.convert_dict(synonym_dict, dictionary=self.revert_replace_dict())),
         )
 
     def insert_table(self, user_id: str, version: str, intent: Dict[str, Any], slots: Dict[str, Any],
                      entities: List[Dict[str, Any]], events: Dict[str, Any], button: Dict[str, Any],
-                     loop_stack: int = 0, response: Dict[str, Any] = None):
+                     loop_stack: int = 0, response: Dict[str, Any] = None, synonym_dict: Dict[str, Any] = None):
         """
         Insert conversation state into database
         :param user_id: str - unique user identifier
@@ -102,6 +108,7 @@ class ChatStateDB:
         :param button: dict() - dictionary for recreate button events_map
         :param loop_stack: int - chat state's loop stack
         :param response: dict(text, button) - response of chatbot
+        :param synonym_dict: dict() - synonym dict for button
         :return: None
         """
         if not isinstance(user_id, str):
@@ -111,14 +118,15 @@ class ChatStateDB:
             raise ValueError(f"version must be a string not {version}: {type(version)}")
 
         try:
-            intent, entities, slots, events, button, response = self.dump_data(intent, entities, slots, events, button,
-                                                                               response)
+            intent, entities, slots, events, button, response, synonym_dict = self.dump_data(intent, entities, slots,
+                                                                                             events, button,
+                                                                                             response, synonym_dict)
 
         except Exception as ex:
             raise RuntimeWarning(f"Cannot convert intent/slots/entities/events/button to text format by error {ex}")
 
-        sql_statement = f"""INSERT INTO chat_state (user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response) 
-                            VALUES ('{user_id}', '{version}', '{intent}', '{slots}', '{entities}', {datetime.today().timestamp()}, '{events}', {("'" + button + "'") if button else "NULL"}, {loop_stack}, {"'" + response + "'" if response else "NULL"})"""
+        sql_statement = f"""INSERT INTO chat_state (user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response, synonym_dict) 
+                            VALUES ('{user_id}', '{version}', '{intent}', '{slots}', '{entities}', {datetime.today().timestamp()}, '{events}', {("'" + button + "'") if button else "NULL"}, {loop_stack}, {"'" + response + "'" if response else "NULL"}, {"'" + synonym_dict + "'" if synonym_dict else "NULL"})"""
 
         try:
             c = self.conn.cursor()
@@ -132,7 +140,7 @@ class ChatStateDB:
         """
         Get the conversation state of user
         :param user_id: str - unique identifier of the user
-        :return: dict(id, user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response)
+        :return: dict(id, user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response, synonym_dict)
         """
         sql_statement = f"""SELECT * FROM chat_state 
                             WHERE user_id = '{user_id}'
@@ -148,8 +156,10 @@ class ChatStateDB:
 
         chat_state = None
         try:
-            intent, entities, slots, events, button, response = self.load_data(result[3], result[5], result[4],
-                                                                               result[7], result[8], result[10])
+            intent, entities, slots, events, button, response, synonym_dict = self.load_data(result[3], result[5],
+                                                                                             result[4],
+                                                                                             result[7], result[8],
+                                                                                             result[10], result[11])
             chat_state = dict(
                 id=result[0],
                 user_id=result[1],
@@ -161,7 +171,8 @@ class ChatStateDB:
                 events=events,
                 button=button,
                 loop_stack=result[9],
-                response=response
+                response=response,
+                synonym_dict=synonym_dict
             )
 
         except Exception as ex:
@@ -191,8 +202,9 @@ class ChatStateDB:
         user_messages = []
         for row in result:
             try:
-                intent, entities, slots, events, button, response = self.load_data(row[3], row[5], row[4],
-                                                                                   row[7], row[8], row[10])
+                intent, entities, slots, events, button, response, synonym_dict = self.load_data(row[3], row[5], row[4],
+                                                                                                 row[7], row[8],
+                                                                                                 row[10], row[11])
                 user_messages.append(dict(
                     id=row[0],
                     user_id=row[1],
@@ -204,7 +216,8 @@ class ChatStateDB:
                     events=events,
                     button=button,
                     loop_stack=row[9],
-                    response=response
+                    response=response,
+                    synonym_dict=synonym_dict
                 ))
 
             except Exception as ex:
@@ -231,8 +244,9 @@ class ChatStateDB:
         messages = []
         for row in result:
             try:
-                intent, entities, slots, events, button, response = self.load_data(row[3], row[5], row[4],
-                                                                                   row[7], row[8], row[10])
+                intent, entities, slots, events, button, response, synonym_dict = self.load_data(row[3], row[5], row[4],
+                                                                                                 row[7], row[8],
+                                                                                                 row[10], row[11])
                 messages.append(dict(
                     id=row[0],
                     user_id=row[1],
@@ -244,7 +258,8 @@ class ChatStateDB:
                     events=events,
                     button=button,
                     loop_stack=row[9],
-                    response=response
+                    response=response,
+                    synonym_dict=synonym_dict
                 ))
 
             except Exception as ex:
@@ -274,8 +289,9 @@ class ChatStateDB:
         messages = []
         for row in result:
             try:
-                intent, entities, slots, events, button, response = self.load_data(row[3], row[5], row[4],
-                                                                                   row[7], row[8], row[10])
+                intent, entities, slots, events, button, response, synonym_dict = self.load_data(row[3], row[5], row[4],
+                                                                                                 row[7], row[8],
+                                                                                                 row[10], row[11])
                 messages.append(dict(
                     id=row[0],
                     user_id=row[1],
@@ -287,7 +303,8 @@ class ChatStateDB:
                     events=events,
                     button=button,
                     loop_stack=row[9],
-                    response=response
+                    response=response,
+                    synonym_dict=synonym_dict
                 ))
 
             except Exception as ex:
