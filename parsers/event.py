@@ -91,7 +91,7 @@ class TextEvent(Event):
         :param intents_list: list of available intents
         :param slots_list: list of available slots
         """
-        self.slot_regex = "\_[\w\s]+\_"
+        self.slot_regex = "\__[\w\s]+\__"
         self.text = text
 
         self.slots_to_fill = []
@@ -103,7 +103,7 @@ class TextEvent(Event):
     def _check(self, entities_list: List[str], intents_list: List, slots_list: List[str]):
         for t, slot_to_fill in zip(self.text, self.slots_to_fill):
             for slot in slot_to_fill:
-                if slot[1:-1] not in slots_list:
+                if slot[2:-2] not in slots_list:
                     raise ValueError(f"Slot {slot} is not an available slot")
 
         if not isinstance(self.text, list):
@@ -440,6 +440,7 @@ class ButtonEvent(Event):
             raise ValueError(f"button must be a list, not {button}: {type(button)}")
 
         self.events_map: Dict[str, ButtonTrigger] = dict()
+        self.synonym_dict: Dict[str, str] = dict()
         for b in button:
             if not isinstance(b, dict):
                 raise ValueError(f"button component must be a list, not {b}: {type(b)}")
@@ -450,10 +451,18 @@ class ButtonEvent(Event):
                 raise ValueError(f"title must be a string, not {title}: {type(title)}")
 
             for key, value in b.items():
-                if key not in ["title", "text", "set_slot", "trigger_intent"]:
-                    raise ValueError(f"Button only support 'text', 'set_slot', and 'trigger_intent' not {key}")
+                if key not in ["title", "text", "set_slot", "trigger_intent", "synonym"]:
+                    raise ValueError(f"Button only support 'text', 'set_slot', 'trigger_intent', 'synonym' not {key}")
 
-            self.events_map[title] = ButtonTrigger({k: v for k, v in b.items() if k != "title"}, entities_list, intents_list, slots_list)
+            synonym = b.get("synonym", None)
+            if synonym is not None:
+                if not isinstance(synonym, list):
+                    raise ValueError(f"synonym must be a list of string, not {synonym}")
+
+                for s in synonym:
+                    self.synonym_dict[s] = title
+
+            self.events_map[title] = ButtonTrigger({k: v for k, v in b.items() if k not in ["title", "synonym"]}, entities_list, intents_list, slots_list)
 
     def export(self):
         return dict(button=self.button)
@@ -462,6 +471,7 @@ class ButtonEvent(Event):
         return EventOutput(dict(
             button=dict(
                 text=self.button["text"],
-                events_map=self.events_map
+                events_map=self.events_map,
+                synonym_dict=self.synonym_dict
             )
         ))
