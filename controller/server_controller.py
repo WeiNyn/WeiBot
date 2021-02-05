@@ -1,14 +1,17 @@
-from typing import Optional
 import warnings
+from typing import Optional
 
 from actions.defined_actions import *
 from database.database import ChatStateDB
 from nlu_pipelines.DIETClassifier.src.models.wrapper import DIETClassifierWrapper as Wrapper
-from parsers.event import ButtonEvent, EventOutput, ButtonTrigger
+from parsers.event import EventOutput, ButtonTrigger
 from parsers.flow_map import FlowMap
 
 
 class ConversationState:
+    """
+    Object that storing and processing conversation
+    """
     def __init__(self,
                  user_id: str,
                  version: str,
@@ -21,7 +24,24 @@ class ConversationState:
                  button: Dict[str, Any] = None,
                  events: Dict[str, Any] = None,
                  loop_stack: int = 0,
-                 response: Dict[str, Any] = None):
+                 response: Dict[str, Any] = None,
+                 synonym_dict: Dict[str, str] = None):
+        """
+        Create ConversationState
+        :param user_id: str - unique identifier of user
+        :param version: str- version of system
+        :param entities_list: list(str) - list of available entities
+        :param intents_list: list(str) - list of available intents
+        :param slots_list: list(str) - list of available slots
+        :param intent: dict(name, intent_ranking, priority) - current intent of user message
+        :param entities: list(dict(text, entity_name, etc)) - current entities of user message
+        :param slots: dict(slots_name) - current slots of conversation
+        :param button: dict(str, any) - dictionary to build button
+        :param events: dict(str, any) - current events of conversation
+        :param loop_stack: int - loop_stack to break the infinite loop
+        :param response: MessageOutput - the output of chatbot
+        :param synonym_dict: dict(str, str) - the synonym_dict for button
+        """
         self.user_id: str = user_id
         self.version: str = version
 
@@ -31,6 +51,7 @@ class ConversationState:
 
         self.button_dict: Dict[str, Any] = button
         self.button: Optional[Dict[str, ButtonTrigger]] = None
+        self.synonym_dict: Optional[Dict[str, str]] = synonym_dict
 
         self.events: EventOutput = EventOutput(dict()) if not events else EventOutput(events)
 
@@ -42,6 +63,13 @@ class ConversationState:
         self._check(entities_list, intents_list, slots_list)
 
     def _check(self, entities_list: List[str], intents_list: List[str], slots_list: List[str]):
+        """
+        Validate information and create needed attribute
+        :param entities_list: list(str) - list of available entities
+        :param intents_list: list(str) - list of available intents
+        :param slots_list: list(str) - list of available slots
+        :return:
+        """
         if self.intent["name"] not in intents_list:
             raise ValueError(f"Intent {self.intent['name']} is not an available intent")
 
@@ -59,7 +87,7 @@ class ConversationState:
 
         if self.button_dict is not None:
             self.button = dict()
-            for key, value in self.button_dict:
+            for key, value in self.button_dict.items():
                 self.button[key] = ButtonTrigger(value, entities_list, intents_list, slots_list)
 
         else:
@@ -72,7 +100,8 @@ class ConversationState:
             if not isinstance(self.response_dict.get('text', None), str):
                 raise ValueError(f"'text' must be a string, not {self.response_dict.get('text')}")
 
-            if not isinstance(self.response_dict.get('button', None), list):
+            if not isinstance(self.response_dict.get('button', None), list) and self.response_dict.get('button',
+                                                                                                       None) is not None:
                 raise ValueError(f"'button' must be a list of string, not {self.response_dict.get('button')}")
 
             self.response = MessageOutput(text=self.response_dict.get('text'), button=self.response_dict.get("button"))
@@ -81,6 +110,10 @@ class ConversationState:
             self.response = None
 
     def export(self) -> Dict[str, Any]:
+        """
+        Export to dictionary for saving to db
+        :return: dict(str, any)
+        """
         return dict(
             user_id=self.user_id,
             version=self.version,
@@ -90,21 +123,35 @@ class ConversationState:
             events=self.events.__dict__,
             button=None if self.button is None else {k: v.export() for k, v in self.button.items()},
             loop_stack=self.loop_stack,
-            response=None if self.response is None else self.response.__dict__
+            response=None if self.response is None else self.response.__dict__,
+            synonym_dict=self.synonym_dict
         )
 
 
 class MessageOutput:
+    """
+    Class that defines the output of chatbot
+    """
     def __init__(self, text: str = None, button: List[str] = None):
         self.text = text
         self.button = button
 
 
 class Controller:
+    """
+    THe main handler for the server
+    """
     def __init__(self, nlu: Wrapper,
                  flow_map: FlowMap,
                  version: str,
                  base_action_class=BaseActionClass):
+        """
+        Create controller
+        :param nlu: DIETClassifierWrapper - the nlu pipeline for chatbot
+        :param flow_map: FlowMap - the pre-defined flow_map for chatbot
+        :param version: str - current version of system
+        :param base_action_class: class name - Base action class for custom actions
+        """
         self.nlu = nlu
         self.flow_map = flow_map
 
@@ -113,6 +160,11 @@ class Controller:
         self._create_action_dict(base_action_class)
 
     def _create_action_dict(self, base_action_class):
+        """
+        Create a dynamic actions dictionary based on the python module
+        :param base_action_class: class name - Base action class for custom actions
+        :return: None
+        """
         g = globals().copy()
         action_classes = [cls.__name__ for cls in base_action_class.__subclasses__()]
         action_objects = [
@@ -124,6 +176,12 @@ class Controller:
         }
 
     def translate_user_input(self, user_input: str, user_state: ConversationState):
+        """
+        Using nlu pipeline to predict user intent and entities
+        :param user_input: str - user message
+        :param user_state: ConversationState - the current state of conversation
+        :return:
+        """
         sentences = [user_input]
         predicted_output = self.nlu.predict(sentences)[0]
 
@@ -142,7 +200,16 @@ class Controller:
         user_state.intent = intent
         user_state.entities = entities
 
-    def handle_flow(self, user_state: ConversationState, trigger_intent: str = None, request_slot: str = None, action: str = None) -> EventOutput:
+    def handle_flow(self, user_state: ConversationState, trigger_intent: str = None, request_slot: str = None,
+                    action: str = None) -> EventOutput:
+        """
+        Get the events based on give action
+        :param user_state: ConversationState - current state of conversation
+        :param trigger_intent: optional(str) - name of triggered intent
+        :param request_slot: optional(str) - name of request slot
+        :param action: optional(str) - name of action
+        :return: EventOutput
+        """
         if action:
             target_action = self.action_dict[action]
             events = target_action(user_state.intent, user_state.entities, user_state.slots)
@@ -162,33 +229,56 @@ class Controller:
             return events
 
         else:
-            events = self.flow_map.actions_map[user_state.intent["name"]](user_state.intent, user_state.entities, user_state.slots)
+            events = self.flow_map.actions_map[user_state.intent["name"]](user_state.intent, user_state.entities,
+                                                                          user_state.slots)
             return events
 
     def __call__(self, user_state: ConversationState, user_message: str = None) -> MessageOutput:
+        """
+        Main loop that process the conversation, this process only change the attribute of given ConversationState
+        :param user_state: ConversationState - current state of conversation
+        :param user_message: optional(str) - user message
+        :return: MessageOutput - output to user
+        """
 
+        # if loop_stack exceeds limit, return default action to user
         if user_state.loop_stack >= 10:
             user_state.events = EventOutput(dict(trigger_intent="default"))
+            user_state.button = None
+            user_state.synonym_dict = None
+            user_message = None
 
-        if user_state.button is not None:
+        # priority handle button in event
+        if user_state.button is not None and user_message is not None:
             target_event = None
+            # handle synonym message first
+            if user_state.synonym_dict is not None:
+                for key, value in user_state.synonym_dict.items():
+                    if user_message.lower() == key.lower():
+                        user_message = value
+
+            # handle match message
             for key, value in user_state.button.items():
                 if user_message.lower() == key.lower():
                     target_event = value
 
             if target_event is not None:
                 if isinstance(target_event, dict):
-                    target_event = ButtonTrigger(target_event, self.flow_map.entities_list, self.flow_map.intents_list, self.flow_map.slots_list)
+                    target_event = ButtonTrigger(target_event, self.flow_map.entities_list, self.flow_map.intents_list,
+                                                 self.flow_map.slots_list)
 
                 target_events = target_event(user_state.intent, user_state.entities, user_state.slots)
 
                 user_state.events = target_events
                 user_state.button = None
+                user_state.synonym_dict = None
                 user_state.loop_stack += 1
 
         if user_message:
             self.translate_user_input(user_input=user_message, user_state=user_state)
 
+        # The most confusing thing
+        # Each action that using recursive strategies will increase the loop stack
         events = user_state.events.__dict__
 
         if events.get('action', None) is not None:
@@ -216,13 +306,12 @@ class Controller:
             button = events.get("button")
             text = button.get("text")
             events_map = button.get("events_map")
-
-            # for key, value in button["events_map"].items():
-            #     button["events_map"][key] = value.export()
+            synonym_dict = button.get("synonym_dict")
 
             option = [key for key in events_map.keys()]
 
             user_state.button = events_map
+            user_state.synonym_dict = synonym_dict
 
             output = MessageOutput(text=text, button=option)
 
@@ -252,7 +341,20 @@ class Controller:
 
 
 class UserConversations:
-    def __init__(self, db: str, entities_list: List[str], intents_list: List[str], slots_list: List[str], user_limit: int = 100, version: str = "v0.0"):
+    """
+    Object that store and handle all the thing that replace to ConversationState (saving, loading, finding, processing)
+    """
+    def __init__(self, db: str, entities_list: List[str], intents_list: List[str], slots_list: List[str],
+                 user_limit: int = 100, version: str = "v0.0"):
+        """
+        Create UserConversations object.
+        :param db: str - path to sqlite db
+        :param entities_list: list(str) - list of available entities
+        :param intents_list: list(str) - list of available intents
+        :param slots_list: list(str) - list of available slots
+        :param user_limit: int - number of maximum users store in memory
+        :param version: str - version of system
+        """
         self.db = ChatStateDB(db)
         self.entities_list = entities_list
         self.intents_list = intents_list
@@ -265,26 +367,35 @@ class UserConversations:
         self._load_from_db()
 
     def _load_from_db(self):
-        messages = self.db.fetch_users()
+        """
+        load user_limit number of user from db
+        :return: None
+        """
+        messages = self.db.fetch_users(limit=self.user_limit)
         for value in messages:
             self.user_queue[value["user_id"]] = ConversationState(
-                                                    user_id=value["user_id"],
-                                                    version=value["version"],
-                                                    entities_list=self.entities_list,
-                                                    intents_list=self.intents_list,
-                                                    slots_list=self.slots_list,
-                                                    intent=value["intent"],
-                                                    entities=value["entities"],
-                                                    slots=value["slots"],
-                                                    button=value["button"],
-                                                    events=value["events"],
-                                                    loop_stack=value["loop_stack"],
-                                                    response=value["response"]
-                                                )
+                user_id=value["user_id"],
+                version=value["version"],
+                entities_list=self.entities_list,
+                intents_list=self.intents_list,
+                slots_list=self.slots_list,
+                intent=value["intent"],
+                entities=value["entities"],
+                slots=value["slots"],
+                button=value["button"],
+                events=value["events"],
+                loop_stack=value["loop_stack"],
+                response=value["response"]
+            )
 
             self.frequency_queue.append(dict(user_id=value["user_id"], frequency=0))
 
     def save_to_db(self, user_id: str):
+        """
+        Save the specified user to db
+        :param user_id: str - id of user
+        :return: None
+        """
         if self.user_queue.get(user_id, None) is not None:
             save_dict = self.user_queue[user_id].export()
             self.db.insert_table(
@@ -295,6 +406,11 @@ class UserConversations:
             warnings.warn(f"user {user_id} not in user_queue")
 
     def load_user(self, user_id: str):
+        """
+        Load the specified user from db
+        :param user_id: str - id of user
+        :return: None
+        """
         if self.user_queue.get(user_id, None) is not None:
             warnings.warn(f"user {user_id} already in user_queue")
 
@@ -309,32 +425,37 @@ class UserConversations:
             user_data = self.db.fetch_chat_state(user_id=user_id)
             if user_data is not None:
                 self.user_queue[user_id] = ConversationState(
-                                                        user_id=user_data["user_id"],
-                                                        version=user_data["version"],
-                                                        entities_list=self.entities_list,
-                                                        intents_list=self.intents_list,
-                                                        slots_list=self.slots_list,
-                                                        intent=user_data["intent"],
-                                                        entities=user_data["entities"],
-                                                        slots=user_data["slots"],
-                                                        button=user_data["button"],
-                                                        events=user_data["events"],
-                                                        loop_stack=user_data["loop_stack"],
-                                                        response=user_data["response"]
-                                                    )
+                    user_id=user_data["user_id"],
+                    version=user_data["version"],
+                    entities_list=self.entities_list,
+                    intents_list=self.intents_list,
+                    slots_list=self.slots_list,
+                    intent=user_data["intent"],
+                    entities=user_data["entities"],
+                    slots=user_data["slots"],
+                    button=user_data["button"],
+                    events=user_data["events"],
+                    loop_stack=user_data["loop_stack"],
+                    response=user_data["response"]
+                )
 
             else:
                 self.user_queue[user_id] = ConversationState(
-                                                        user_id=user_id,
-                                                        version=self.version,
-                                                        entities_list=self.entities_list,
-                                                        intents_list=self.intents_list,
-                                                        slots_list=self.slots_list
-                                                    )
+                    user_id=user_id,
+                    version=self.version,
+                    entities_list=self.entities_list,
+                    intents_list=self.intents_list,
+                    slots_list=self.slots_list
+                )
 
             self.frequency_queue.append(dict(user_id=user_id, frequency=0))
 
     def __call__(self, user_id: str):
+        """
+        Find the user from db, load it if exists, else create new ConversationState object
+        :param user_id: str - id of user
+        :return: ConversationState - conversation state of user
+        """
         user_state = self.user_queue.get(user_id, None)
 
         if not user_state:
