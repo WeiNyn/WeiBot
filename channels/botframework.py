@@ -148,7 +148,6 @@ class BotFramework:
         :param user_input: dict() - request from skupe
         :return: dict() - data to process
         """
-        print(user_input)
         text = user_input["text"]
         id = user_input["from"]["id"]
         user_name = user_input["from"]["name"]

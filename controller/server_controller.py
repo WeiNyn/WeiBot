@@ -14,6 +14,7 @@ class ConversationState:
     """
     def __init__(self,
                  user_id: str,
+                 user_name: str,
                  version: str,
                  entities_list: List[str],
                  intents_list: List[str],
@@ -29,6 +30,7 @@ class ConversationState:
         """
         Create ConversationState
         :param user_id: str - unique identifier of user
+        :param user_name: str - name of user
         :param version: str- version of system
         :param entities_list: list(str) - list of available entities
         :param intents_list: list(str) - list of available intents
@@ -43,6 +45,7 @@ class ConversationState:
         :param synonym_dict: dict(str, str) - the synonym_dict for button
         """
         self.user_id: str = user_id
+        self.user_name: str = user_name
         self.version: str = version
 
         self.intent: Dict[str, Any] = dict(name="default", intent_ranking={}, priority=0) if not intent else intent
@@ -116,6 +119,7 @@ class ConversationState:
         """
         return dict(
             user_id=self.user_id,
+            user_name=self.user_name,
             version=self.version,
             intent=self.intent,
             slots=self.slots,
@@ -375,6 +379,7 @@ class UserConversations:
         for value in messages:
             self.user_queue[value["user_id"]] = ConversationState(
                 user_id=value["user_id"],
+                user_name=value["user_name"],
                 version=value["version"],
                 entities_list=self.entities_list,
                 intents_list=self.intents_list,
@@ -405,7 +410,7 @@ class UserConversations:
         else:
             warnings.warn(f"user {user_id} not in user_queue")
 
-    def load_user(self, user_id: str):
+    def load_user(self, user_id: str, user_name):
         """
         Load the specified user from db
         :param user_id: str - id of user
@@ -426,6 +431,7 @@ class UserConversations:
             if user_data is not None:
                 self.user_queue[user_id] = ConversationState(
                     user_id=user_data["user_id"],
+                    user_name=user_data["user_name"],
                     version=user_data["version"],
                     entities_list=self.entities_list,
                     intents_list=self.intents_list,
@@ -442,6 +448,7 @@ class UserConversations:
             else:
                 self.user_queue[user_id] = ConversationState(
                     user_id=user_id,
+                    user_name=user_name,
                     version=self.version,
                     entities_list=self.entities_list,
                     intents_list=self.intents_list,
@@ -450,16 +457,17 @@ class UserConversations:
 
             self.frequency_queue.append(dict(user_id=user_id, frequency=0))
 
-    def __call__(self, user_id: str):
+    def __call__(self, user_id: str, user_name: str = "anonymous"):
         """
         Find the user from db, load it if exists, else create new ConversationState object
         :param user_id: str - id of user
+        :param user_name: str - name of user
         :return: ConversationState - conversation state of user
         """
         user_state = self.user_queue.get(user_id, None)
 
         if not user_state:
-            self.load_user(user_id=user_id)
+            self.load_user(user_id=user_id, user_name=user_name)
 
             user_state = self.user_queue.get(user_id, None)
 
