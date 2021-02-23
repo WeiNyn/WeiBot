@@ -31,7 +31,7 @@ user_conversations: UserConversations = UserConversations(db=Setting.user_db,
 
 bot_framework = BotFramework(Setting.app_id, Setting.app_password, Setting.bot)
 
-
+# ARM required socketio setup
 if Setting.arm_on:
     import socketio
 
@@ -40,31 +40,45 @@ if Setting.arm_on:
 
 
 class Message(BaseModel):
+    """
+    Input scheme for /chatbot/rest
+    """
     message: str
     user_id: str
 
 
 @router.post("/rest/")
 async def send_rest(message: Message):
+    """
+    Receive message and give response
+    :param message: Message object type
+    :return: None
+    """
     user_id = message.user_id
     user_input = message.message
 
     global user_conversations
     global controller
 
+    # Query user stats from database
     user_state = user_conversations(user_id)
 
+    # Handle current conversation
     output = controller(user_state, user_input).__dict__
 
     user_conversations.save_to_db(user_id=user_id)
 
     responses = jsonable_encoder(output)
-
     return JSONResponse(responses)
 
 
 @router.post("/botframework/")
 async def send_botframework(user_input: Dict[str, Any] = Body(...)):
+    """
+    Receive message from Skype and send back to user on Skype
+    :param user_input: Standard format from Skype
+    :return: None
+    """
     user_input = bot_framework.translate_botframework_input(user_input)
 
     user_id = user_input["id"]
@@ -74,13 +88,16 @@ async def send_botframework(user_input: Dict[str, Any] = Body(...)):
     global user_conversations
     global controller
 
+    # If Arm is on, this path check the 'u2u' status of user and send message to ARM system instead of Skype
     if Setting.arm_on:
         u2u_result = await handle_u2u_message(user_input=user_input)
         if u2u_result is True:
             return None
 
+    # Query user stats from database
     user_state = user_conversations(user_id, user_name)
 
+    # Handle current conversation
     output = controller(user_state, user_message).__dict__
 
     user_conversations.save_to_db(user_id=user_id)
@@ -103,6 +120,11 @@ async def send_botframework(user_input: Dict[str, Any] = Body(...)):
 
 
 async def handle_u2u_message(user_input: Dict[str, Any]):
+    """
+    If ARM system is on, this function check the 'u2u' status of user and send to ARM instead of Skype
+    :param user_input: Standard format from Skype
+    :return: bool - Redirect to ARM or not
+    """
     user_id = user_input["id"]
     user_message = user_input["text"]
 
@@ -122,7 +144,7 @@ async def handle_u2u_message(user_input: Dict[str, Any]):
         elif user_message == "(close_door)":
             event_name = "close_door"
         else:
-            event_name = "chatbotReply"
+            event_name = "chatbotRely"
 
         try:
             sio.emit(event_name, {"floor": floor, "msg": user_message})

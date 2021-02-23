@@ -14,6 +14,7 @@ class BotFramework:
     def __init__(self, app_id: str, app_password: str, bot: Dict[str, Any]):
         """
         Create botframework
+
         :param app_id: str - app id
         :param app_password: str - app password
         :param bot: dict() - bot information
@@ -31,6 +32,7 @@ class BotFramework:
     async def _get_headers(self) -> Optional[Dict[str, Any]]:
         """
         Get the authorization headers if not available
+
         :return: dict() - the headers
         """
         if self.token_expiration_date < datetime.now():
@@ -69,6 +71,7 @@ class BotFramework:
     def prepare_message(self, recipient_id: str, user_name: str, message_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Prepare data to send message
+
         :param recipient_id: str - id of recipient conversation
         :param user_name: str - name of user
         :param message_data: dict() - data of message
@@ -91,6 +94,7 @@ class BotFramework:
     async def send(self, message_data: Dict[str, Any], conversation) -> None:
         """
         send message to Azure
+
         :param message_data: dict() - message data
         :param conversation: dict() - the conversation to send
         :return: None
@@ -108,12 +112,30 @@ class BotFramework:
             raise RuntimeError(f"Error truing to send BotFramework message. response {send_response.text}")
 
     async def send_text_message(self, recipient_id: str, user_name: str, conversation: Dict[str, Any], text: str) -> None:
+        """
+        Send normal text message
+
+        :param recipient_id: str - recipient id
+        :param user_name: str - user name
+        :param conversation: dict(id) - conversation from skype request
+        :param text: str - text message
+        :return: None
+        """
         for message_part in text.strip().split("\n\n"):
             text_message = {"text": message_part}
             message = self.prepare_message(conversation["id"], user_name, text_message)
             await self.send(message, conversation)
 
     async def send_image_url(self, recipient_id: str, user_name: str, conversation: Dict[str, Any], image: str) -> None:
+        """
+        Send image with URL
+
+        :param recipient_id: str - recipient id
+        :param user_name: str - user name
+        :param conversation: dict(id) - conversation from skype request
+        :param image: str - url of image
+        :return: None
+        """
         hero_content = {
             "contentType": "application/vnd.microsoft.card.hero",
             "content": {"images": [{"url": image}]},
@@ -124,6 +146,16 @@ class BotFramework:
         await self.send(message, conversation)
 
     async def send_text_with_buttons(self, recipient_id: str, user_name: str, conversation: Dict[str, Any], text: str, buttons: List[str]) -> None:
+        """
+        Send text message with selection buttons
+
+        :param recipient_id: str - recipient id
+        :param user_name: str - user name
+        :param conversation: dict(id) - conversation from skype request
+        :param text: str - text message
+        :param buttons: list(str) - list of selection
+        :return: None
+        """
         buttons = [{
             "type": "imBack",
             "value": button,
@@ -145,6 +177,7 @@ class BotFramework:
     def translate_botframework_input(user_input: Dict[str, Any]):
         """
         Translate the request from skype to minimize form
+
         :param user_input: dict() - request from skupe
         :return: dict() - data to process
         """
