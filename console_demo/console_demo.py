@@ -8,7 +8,7 @@ from parsers.flow_map import FlowMap
 from nlu_pipelines.DIETClassifier.src.models.wrapper import DIETClassifierWrapper as Wrapper
 
 MODEL_CONFIG = "/home/weinyn/Documents/WeiBot/config/config.yml"
-FLOW_CONFIG = "/home/weinyn/Documents/WeiBot/config/flow_config.yml"
+FLOW_CONFIG = "/home/weinyn/Documents/WeiBot/config/final_config.yml"
 DOMAIN_CONFIG = "/home/weinyn/Documents/WeiBot/config/domain.yml"
 
 nlu = Wrapper(MODEL_CONFIG)
