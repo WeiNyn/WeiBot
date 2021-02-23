@@ -32,6 +32,13 @@ user_conversations: UserConversations = UserConversations(db=Setting.user_db,
 bot_framework = BotFramework(Setting.app_id, Setting.app_password, Setting.bot)
 
 
+if Setting.arm_on:
+    import socketio
+
+    sio = socketio.Client()
+    sio.connect(Setting.arm_socket)
+
+
 class Message(BaseModel):
     message: str
     user_id: str
@@ -62,11 +69,17 @@ async def send_botframework(user_input: Dict[str, Any] = Body(...)):
 
     user_id = user_input["id"]
     user_message = user_input["text"]
+    user_name = user_input["user_name"]
 
     global user_conversations
     global controller
 
-    user_state = user_conversations(user_id)
+    if Setting.arm_on:
+        u2u_result = await handle_u2u_message(user_input=user_input)
+        if u2u_result is True:
+            return None
+
+    user_state = user_conversations(user_id, user_name)
 
     output = controller(user_state, user_message).__dict__
 
@@ -87,3 +100,36 @@ async def send_botframework(user_input: Dict[str, Any] = Body(...)):
         await bot_framework.send_text_message(recipient_id=user_input["recipient_id"],
                                               user_name=user_input["user_name"],
                                               conversation=user_input["conversation"], text=text)
+
+
+async def handle_u2u_message(user_input: Dict[str, Any]):
+    user_id = user_input["id"]
+    user_message = user_input["text"]
+
+    global user_conversations
+
+    arm_status = user_conversations.db.get_user_status(user_id=user_id)
+
+    if arm_status:
+        u2u = arm_status["u2u"]
+        floor = arm_status["floor"]
+
+        if not u2u:
+            return False
+
+        if user_message == "(open_door)":
+            event_name = "open_door"
+        elif user_message == "(close_door)":
+            event_name = "close_door"
+        else:
+            event_name = "chatbotReply"
+
+        try:
+            sio.emit(event_name, {"floor": floor, "msg": user_message})
+            return True
+
+        except Exception as ex:
+            return False
+
+    return False
+
