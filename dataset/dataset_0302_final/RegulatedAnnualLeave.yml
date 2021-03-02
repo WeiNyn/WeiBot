@@ -1,0 +1,21 @@
+nlu:
+- intent: RegulatedAnnualLeave
+  examples: '- How many annual leave for employee?
+
+    - How about number of annual leave day?
+
+    - How many off day I have each year?
+
+    - Annual leave day in year
+
+    - Annual leave days
+
+    - how many annual leave day each year
+
+    - how many annual leave
+
+    - how about annual leave day
+
+    - How many annual leave I have
+
+    '

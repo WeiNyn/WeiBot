@@ -1,0 +1,33 @@
+nlu:
+- intent: SetWorkingType
+  examples: '- I work on [office hours](working_type)
+
+    - I work on [office hour]{"entity": "working_type", "value": "office hours"}
+
+    - I''m working on [office hours](working_type)
+
+    - I''m working on [office hour]{"entity": "working_type", "value": "office hours"}
+
+    - I work on [shift](working_type)
+
+    - I''m working on [shift](working_type)
+
+    - I am working on [office hours](working_type)
+
+    - I am working on [office hour]{"entity": "working_type", "value": "office hours"}
+
+    - on [shift](working_type)
+
+    - on [office hours](working_type)
+
+    - [shift](working_type)
+
+    - [office hours](working_type)
+
+    - oh, I work on [office hours](working_type)
+
+    - how about working on [shift](working_type)
+
+    - today
+
+    '

@@ -1,0 +1,17 @@
+nlu:
+- intent: UnpaidLeave
+  examples: '- How many unpaid leave can I get
+
+    - Can I leave after using all of my annual leave day
+
+    - Unpaid leave
+
+    - How about unpaid leave
+
+    - unpaid leave please
+
+    - Can I leave after using all of my annual leave day
+
+    - Can I leave after using all of my annual leave day
+
+    '

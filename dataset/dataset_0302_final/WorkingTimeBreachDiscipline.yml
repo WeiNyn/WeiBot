@@ -1,0 +1,27 @@
+nlu:
+- intent: WorkingTimeBreachDiscipline
+  examples: '- What if I have late-in record?
+
+    - What if I have early-out record?
+
+    - What if I late-in
+
+    - What if I late in
+
+    - What if I come late
+
+    - What if I early-out
+
+    - What if I early out
+
+    - What if I come home early
+
+    - How many time can I early-out
+
+    - How many time can I late-in
+
+    - How many time can I early-out and late-in
+
+    - How many time can I late in
+
+    '

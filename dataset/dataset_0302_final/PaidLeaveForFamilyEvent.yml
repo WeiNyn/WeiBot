@@ -1,0 +1,17 @@
+nlu:
+- intent: PaidLeaveForFamilyEvent
+  examples: '- Can I leave for family events
+
+    - Did I get paid for my family events
+
+    - Will I get paid for my family events
+
+    - Will I get paid for Marriage
+
+    - Will I get paid for the dead of family member
+
+    - Can I leave for my Marriage
+
+    - Can I get paid for family event off
+
+    '

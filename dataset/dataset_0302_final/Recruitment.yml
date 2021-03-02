@@ -1,0 +1,7 @@
+nlu:
+- intent: Recruitment
+  examples: '- How about recruitment policy
+
+    - recruitment process
+
+    '

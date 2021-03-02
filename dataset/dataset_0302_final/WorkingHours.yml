@@ -1,0 +1,43 @@
+nlu:
+- intent: WorkingHours
+  examples: '- What are average working hours per day?
+
+    - Average working hours per day?
+
+    - What are average woring hours per week?
+
+    - Average working hours per week?
+
+    - What are average woring hours per month?
+
+    - Average working hours per month?
+
+    - How about working time?
+
+    - Working time?
+
+    - What is office-working time?
+
+    - Can you tell me about working time?
+
+    - I want to know about working hours
+
+    - About working hours
+
+    - Working time in day
+
+    - working hours
+
+    - how about [office](working_type) working hours
+
+    - how about [office hours](working_type) working time ?
+
+    - How about working hours
+
+    - about working hours
+
+    - how about working hours
+
+    - so, what is the average working hours
+
+    '

@@ -1,64 +1,36 @@
 import os
 import sys
+from typing import Dict, Tuple, Any
+import socketio
 
-from fastapi import Body, APIRouter
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
 from pydantic.main import BaseModel
 
 sys.path.append(os.getcwd())
 
 from controller.server_controller import Controller, UserConversations
-from parsers.flow_map import FlowMap
-from nlu_pipelines.DIETClassifier.src.models.wrapper import DIETClassifierWrapper as Wrapper
 from channels.botframework import BotFramework
-from actions.defined_actions import *
-
-from app.setting.setting import Setting
-
-router = APIRouter()
-
-nlu: Wrapper = Wrapper(Setting.model_config)
-flow_map: FlowMap = FlowMap(Setting.flow_config, Setting.domain_config)
-controller: Controller = Controller(nlu=nlu, flow_map=flow_map, version=Setting.version,
-                                    base_action_class=Setting.base_action_class)
-
-user_conversations: UserConversations = UserConversations(db=Setting.user_db,
-                                                          entities_list=flow_map.entities_list,
-                                                          intents_list=flow_map.intents_list,
-                                                          slots_list=flow_map.slots_list,
-                                                          user_limit=10)
-
-bot_framework = BotFramework(Setting.app_id, Setting.app_password, Setting.bot)
-
-# ARM required socketio setup
-if Setting.arm_on:
-    import socketio
-
-    sio = socketio.Client()
-    sio.connect(Setting.arm_socket)
 
 
 class Message(BaseModel):
     """
-    Input scheme for /chatbot/rest
+    Input scheme for sending messages through rest api
     """
     message: str
     user_id: str
 
 
-@router.post("/rest/")
-async def send_rest(message: Message):
+async def send_rest_func(message: Message, user_conversations: UserConversations, controller: Controller) -> Tuple[Dict[str, Any], UserConversations, Controller]:
     """
     Receive message and give response
-    :param message: Message object type
-    :return: None
+
+    :param message: Message class - user input request as Message type
+    :param user_conversations: UserConversations - user_conversation manager
+    :param controller: Controller - main controller for server
+    :return: tuple(output, user_conversation, controller)
     """
+
     user_id = message.user_id
     user_input = message.message
-
-    global user_conversations
-    global controller
 
     # Query user stats from database
     user_state = user_conversations(user_id)
@@ -68,16 +40,19 @@ async def send_rest(message: Message):
 
     user_conversations.save_to_db(user_id=user_id)
 
-    responses = jsonable_encoder(output)
-    return JSONResponse(responses)
+    return output, user_conversations, controller
 
 
-@router.post("/botframework/")
-async def send_botframework(user_input: Dict[str, Any] = Body(...)):
+async def send_bot_framework_func(user_input: Dict[str, Any], user_conversations: UserConversations, controller: Controller, bot_framework: BotFramework, sio: socketio.Client) -> Tuple[UserConversations, Controller, BotFramework]:
     """
     Receive message from Skype and send back to user on Skype
+
     :param user_input: Standard format from Skype
-    :return: None
+    :param user_conversations: UserConversations - user_conversations manager
+    :param controller: Controller - main controller for server
+    :param bot_framework: BotFramework - bot_framework channel
+    :param sio - socketio.Client - the socketio for ARM system
+    :return: tuple(user_conversations, controller, botframework)
     """
     user_input = bot_framework.translate_botframework_input(user_input)
 
@@ -85,14 +60,11 @@ async def send_botframework(user_input: Dict[str, Any] = Body(...)):
     user_message = user_input["text"]
     user_name = user_input["user_name"]
 
-    global user_conversations
-    global controller
-
     # If Arm is on, this path check the 'u2u' status of user and send message to ARM system instead of Skype
-    if Setting.arm_on:
-        u2u_result = await handle_u2u_message(user_input=user_input)
+    if sio is not None:
+        u2u_result = await handle_u2u_message(user_input=user_input, user_conversations=user_conversations, sio=sio)
         if u2u_result is True:
-            return None
+            return user_conversations, controller, bot_framework
 
     # Query user stats from database
     user_state = user_conversations(user_id, user_name)
@@ -118,17 +90,20 @@ async def send_botframework(user_input: Dict[str, Any] = Body(...)):
                                               user_name=user_input["user_name"],
                                               conversation=user_input["conversation"], text=text)
 
+    return user_conversations, controller, bot_framework
 
-async def handle_u2u_message(user_input: Dict[str, Any]):
+
+async def handle_u2u_message(user_input: Dict[str, Any], user_conversations: UserConversations, sio: socketio.Client) -> bool:
     """
     If ARM system is on, this function check the 'u2u' status of user and send to ARM instead of Skype
+
     :param user_input: Standard format from Skype
+    :param user_conversations: UserConversations - user_conversations manager
+    :param sio: socketio.Client - the socketio for the ARM system
     :return: bool - Redirect to ARM or not
     """
     user_id = user_input["id"]
     user_message = user_input["text"]
-
-    global user_conversations
 
     arm_status = user_conversations.db.get_user_status(user_id=user_id)
 
@@ -151,7 +126,7 @@ async def handle_u2u_message(user_input: Dict[str, Any]):
             return True
 
         except Exception as ex:
+            print(f"Cannot send event to socket with error {ex}")
             return False
 
     return False
-

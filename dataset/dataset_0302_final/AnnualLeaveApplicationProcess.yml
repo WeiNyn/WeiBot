@@ -1,0 +1,13 @@
+nlu:
+- intent: AnnualLeaveApplicationProcess
+  examples: '- How about annual leave?
+
+    - annual leave?
+
+    - annual leave process
+
+    - How about annual leave process
+
+    - How about annual leave application process
+
+    '

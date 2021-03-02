@@ -1,0 +1,11 @@
+nlu:
+- intent: WorkingDay
+  examples: '- How many work day per week?
+
+    - About off day of week?
+
+    - off day?
+
+    - Working day of week?
+
+    '

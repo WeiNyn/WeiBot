@@ -1,0 +1,21 @@
+nlu:
+- intent: TemporarySetWorkingType
+  examples: '- How about [office hours](working_type)
+
+    - How about [office hour]{"entity": "working_type", "value": "office hours"}
+
+    - How about [shift](working_type)
+
+    - What if I work on [office hours](working_type)
+
+    - What if I work on [office hour]{"entity": "working_type", "value": "office hours"}
+
+    - What if I work on [shift](working_type)
+
+    - how about work on [shift](working_type)
+
+    - how about [office hours](working_type)
+
+    - how about [shift](working_type)
+
+    '

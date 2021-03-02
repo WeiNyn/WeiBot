@@ -1,0 +1,19 @@
+nlu:
+- intent: AttendanceRecord
+  examples: '- How about attendence record?
+
+    - About checking attendence?
+
+    - How to check attendence?
+
+    - How can I check attendence?
+
+    - I mean check attendace
+
+    - I want to know about attendance record
+
+    - About attendance recorded
+
+    - How to check attendance
+
+    '

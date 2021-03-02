@@ -1,0 +1,15 @@
+nlu:
+- intent: UnusedAnnualLeave
+  examples: '- What can I do with my unused annual leave day
+
+    - What can I do with my unused day
+
+    - Can I exchange my annual leave day
+
+    - How can I use my unused annual leave day
+
+    - what can I do with my unused annual leave day
+
+    - What can I do with my unused annual leave
+
+    '

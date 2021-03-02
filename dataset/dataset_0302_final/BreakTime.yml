@@ -1,0 +1,27 @@
+nlu:
+- intent: BreakTime
+  examples: '- What is break time?
+
+    - Do we have break time?
+
+    - How about break time?
+
+    - When do we have lunch
+
+    - When can I break
+
+    - Break time?
+
+    - Can I sleep?
+
+    - how about break time ?
+
+    - When do I have break time
+
+    - about break time
+
+    - When do we have break time
+
+    - how about break time
+
+    '

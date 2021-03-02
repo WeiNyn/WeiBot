@@ -101,7 +101,7 @@ def read_from_yaml(file: str) -> List[Dict[str, str]]:
     except Exception as ex:
         raise RuntimeError(f"Cannot read file {file} with error:\t{ex}")
 
-    data = yaml.load(f)["nlu"]
+    data = yaml.load(f, Loader=yaml.FullLoader)["nlu"]
     return data
 
 
@@ -209,7 +209,8 @@ if __name__ == '__main__':
     files = ["dataset/nlu_QnA_converted.yml", "dataset/nlu_QnA_converted.yml"]
 
     df, entities_list, intents_list, synonym_dict = make_dataframe(files)
-    print(df.head(20))
+    print(df.tail(20))
     print(entities_list)
     print(intents_list)
     print(synonym_dict)
+    print(df.iloc[-1][-1])

@@ -4,29 +4,24 @@ import io
 import base64
 from datetime import datetime
 from PIL import Image
+from typing import Tuple, Dict, Any, Optional
 
-from fastapi import Body, APIRouter
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse, FileResponse
 from pydantic.main import BaseModel
 
 sys.path.append(os.getcwd())
 
-from app.setting.setting import Setting
 from database.database import ChatStateDB
 from channels.botframework import BotFramework
+from app.setting.setting import Setting
 
-router = APIRouter()
 
-db = ChatStateDB(db=Setting.user_db)
-bot_framework = BotFramework(Setting.app_id, Setting.app_password, Setting.bot)
 HOST_LINK = Setting.host_link
 IMAGES_PATH = Setting.images_path
 
 
 class SendData(BaseModel):
     """
-    Input scheme for ARM request
+    Input scheme for ARM system
     """
     message: str
     id: str
@@ -35,8 +30,7 @@ class SendData(BaseModel):
     type: int
 
 
-@router.post("/send")
-async def send_message(request: SendData):
+async def send_message_func(request: SendData, bot_framework: BotFramework, db: ChatStateDB) -> Tuple[Optional[Dict[str, Any]], BotFramework]:
     """
     Handle request from ARM and send message to Skype user
      - message: str - text message to user
@@ -49,7 +43,9 @@ async def send_message(request: SendData):
      - floor: floor of ARM device
 
     :param request: dict(message, id, img, type, floor) - explained in the doc
-    :return: None
+    :param bot_framework: BotFramework - bot_framework channel
+    :param db: ChatStateDB - user status database
+    :return: bot_framework
     """
     message = request.message
     id = request.id
@@ -58,12 +54,12 @@ async def send_message(request: SendData):
     floor = request.floor
 
     if not 0 < type < 4:
-        return JSONResponse(jsonable_encoder({"status": False}), status_code=200)
+        return {"status": False}, bot_framework
 
     # Get the requested user status
     arm_status = db.get_user_status(user_id=id)
     if not arm_status:
-        return JSONResponse(jsonable_encoder({"status": False}), status_code=200)
+        return {"status": False}, bot_framework
 
     # Get all user status
     arm_statuses = db.fetch_arm_status()
@@ -77,7 +73,7 @@ async def send_message(request: SendData):
 
     if type == 1:
         if arm_status["u2u"]:
-            return JSONResponse(jsonable_encoder({"status": False}), status_code=200)
+            return {"status": False}, bot_framework
         else:
             arm_status["u2u"] = True
             arm_status["timestamp"] = datetime.today().timestamp()
@@ -101,7 +97,7 @@ async def send_message(request: SendData):
                     user["u2u"] = False
 
     if not len(message):
-        return JSONResponse(jsonable_encoder({"status": True}), status_code=200)
+        return {"status": True}, bot_framework
 
     img_url = None
     if img:
@@ -134,6 +130,8 @@ async def send_message(request: SendData):
 
         db.change_user_status(user_id=user_id, user_name=user_name, u2u=u2u, floor=floor)
 
+    return None, bot_framework
+
 
 async def create_image(img: str, floor: str):
     """
@@ -153,8 +151,7 @@ async def create_image(img: str, floor: str):
     del pil_img
 
 
-@router.get("/user")
-async def get_user():
+async def get_user_func(db: ChatStateDB) -> Dict[str, Any]:
     """
     Get all user status
 
@@ -172,16 +169,4 @@ async def get_user():
             floor=user["floor"]
         )
 
-    return JSONResponse(jsonable_encoder(result_dict), status_code=200)
-
-
-@router.get("/img/")
-async def get_img(floor: str, timestamp: str):
-    """
-    Get image from IMAGES_PATH folder
-
-    :param floor: str - should be {floor}.png
-    :param timestamp: str - timestamp to make the link difference every time it called
-    :return: Image file
-    """
-    return FileResponse(f"{IMAGES_PATH}/{floor}")
+    return result_dict

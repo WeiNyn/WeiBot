@@ -1,0 +1,27 @@
+nlu:
+- intent: HolidaysOff
+  examples: '- How many holidays a year
+
+    - Can I get information about holidays
+
+    - Do we have holidays?
+
+    - What is the time for new year vacation
+
+    - How about lunar new year vacation
+
+    - lunar new year
+
+    - new year vacation
+
+    - Hung king day
+
+    - holiday
+
+    - vacation
+
+    - I want to know about holiday of years
+
+    - How many holiday in a year
+
+    '

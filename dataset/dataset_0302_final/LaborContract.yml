@@ -1,0 +1,13 @@
+nlu:
+- intent: LaborContract
+  examples: '- how about labor contract
+
+    - labor contract
+
+    - time for definite labor contract
+
+    - time for indefinite labor contract
+
+    - Time for indefinite labor contract
+
+    '

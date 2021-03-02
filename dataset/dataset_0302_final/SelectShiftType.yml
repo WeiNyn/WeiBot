@@ -1,0 +1,13 @@
+nlu:
+- intent: SelectShiftType
+  examples: '- [day shift](shift_type)
+
+    - [afternoon shift](shift_type)
+
+    - [night shift](shift_type)
+
+    - [night shift](shift_type) please
+
+    - [afternoon shift](shift_type) please
+
+    '

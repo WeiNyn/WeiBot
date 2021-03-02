@@ -1,0 +1,23 @@
+nlu:
+- intent: WorkTimesBreaches
+  examples: '- What is late in and early out?
+
+    - what is late-in?
+
+    - what is late-in and early-out?
+
+    - what is early-out?
+
+    - What is early out?
+
+    - How about coming late to work?
+
+    - Late in?
+
+    - late-in?
+
+    - early out?
+
+    - early-out?
+
+    '

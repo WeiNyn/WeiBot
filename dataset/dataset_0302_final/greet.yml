@@ -1,0 +1,15 @@
+nlu:
+- intent: greet
+  examples: '- hey
+
+    - hello
+
+    - hi
+
+    - good morning
+
+    - good evening
+
+    - hey there
+
+    '

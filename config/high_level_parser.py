@@ -1,6 +1,8 @@
+from datetime import datetime
 from typing import Dict, Any, List
 
 import yaml
+import zipfile
 
 DEFAULT_CONFIG_FILE = "config/default_config.yml"
 HIGH_LEVEL_CONFIG = "config/high_level_config.yml"
@@ -8,18 +10,27 @@ DOMAIN = "config/domain.yml"
 
 
 def load_data(config: str) -> Dict[str, Any]:
+    """
+    Load data from yaml file
+
+    :param config: str - path to yaml file
+    :return: dict() - config from file
+    """
     try:
         f = open(config, "r")
         data = yaml.load(f, Loader=yaml.FullLoader)
         f.close()
 
     except Exception as ex:
-        raise RuntimeError(f"Cannot load data from {config}")
+        raise RuntimeError(f"Cannot load data from {config} with {ex}")
 
     return data
 
 
 class NormalScheme:
+    """
+    Parse QnA pair that doesn't use working_type slot
+    """
     def __init__(self, config_dict: Dict[str, Any], intents_list: List[str]):
         self.config_dict = config_dict
 
@@ -62,6 +73,9 @@ class NormalScheme:
 
 
 class WorkingTypeDependenceScheme:
+    """
+    Parse QnA pair that uses working_type and shift_type slot
+    """
     def __init__(self, config_dict: Dict[str, Any], intents_list: List[str]):
         self.config_dict = config_dict
 
@@ -104,7 +118,7 @@ class WorkingTypeDependenceScheme:
 
             else:
                 if not (isinstance(day_shift, str), isinstance(afternoon_shift, str), isinstance(night_shift, str)):
-                    raise ValueError(f"day shift, night shift must be string")
+                    raise ValueError(f"day shift, afternoon shift, night shift must be string")
 
             shift_flow = [
                 dict(
@@ -183,6 +197,15 @@ class WorkingTypeDependenceScheme:
 
 
 def high_level_parser(high_level_config: str, save_file: str, default_config: str = DEFAULT_CONFIG_FILE, domain: str = DOMAIN):
+    """
+    Convert high level config to the base level config
+
+    :param high_level_config: str - path to high_level_config file
+    :param save_file: str - path to the destination file
+    :param default_config: str - path to the default_config file
+    :param domain: str - path to domain
+    :return: None
+    """
     try:
         default_config = load_data(default_config)
         domain = load_data(domain)
@@ -206,7 +229,27 @@ def high_level_parser(high_level_config: str, save_file: str, default_config: st
         config_file.close()
 
     except Exception as ex:
-        raise RuntimeError(f"Cannot save data to {save_file}")
+        raise RuntimeError(f"Cannot save data to {save_file} with error {ex}")
+
+
+def create_version(nlu_config: str, high_level_config: str, save_file: str, default_config: str = DEFAULT_CONFIG_FILE, domain: str = DOMAIN):
+    high_level_parser(high_level_config, save_file, default_config, domain)
+    file_list = [nlu_config, high_level_config, save_file, default_config, domain]
+
+    compression = zipfile.ZIP_DEFLATED
+    zip_file_name = f"config/config_{datetime.today().timestamp()}.zip"
+    zf = zipfile.ZipFile(zip_file_name, mode="w")
+
+    try:
+        for file in file_list:
+            zf.write(file, file[int(file.find("config/")):], compress_type=compression)
+
+    except Exception as ex:
+        print(f"Cannot compress files {file_list} by error {ex}")
+
+    zf.close()
+
+    return zip_file_name
 
 
 if __name__ == "__main__":

@@ -1,0 +1,23 @@
+nlu:
+- intent: Pregnant
+  examples: '- Working time for pregnant employee?
+
+    - I''m pregnant?
+
+    - Will this change when I''m pregnant
+
+    - but I am pregnant
+
+    - How about pregnant employee
+
+    - Working time for pregnant employees
+
+    - pregnant
+
+    - pregnant policy
+
+    - Do this thing change when I''m pregnant
+
+    - I''m pregnant
+
+    '

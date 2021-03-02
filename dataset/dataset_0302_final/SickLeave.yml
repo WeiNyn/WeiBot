@@ -1,0 +1,15 @@
+nlu:
+- intent: SickLeave
+  examples: '- How about sick leave
+
+    - Sick leave
+
+    - How many day of sick leave
+
+    - What if I got a cold
+
+    - Will I get paid for sick leave
+
+    - How to get paid for sick leave
+
+    '
