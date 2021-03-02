@@ -22,14 +22,31 @@ actions_map:
 - intent: greet
   priority: 0
   triggers:
-  - slot:
-      start_session: true
-    text:
-    - converasion started
   - set_slot:
       start_session: start
-    text:
-    - hi __user__
+    button:
+      text: Hi __user__ , What can I help you?
+      button:
+      - title: About working hours
+        synonym:
+        - working hours
+        - working hour
+        trigger_intent: WorkingHours
+      - title: About break time
+        synonym:
+        - break time
+        - lunch time
+        - break
+        trigger_intent: BreakTime
+      - title: About Attendance
+        synonym:
+        - attendence
+        - check in
+        trigger_intent: AttendanceRecord
+      - title: Restart
+        synonym:
+        - restart
+        trigger_intent: restart
 - intent: goodbye
   triggers:
   - text:

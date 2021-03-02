@@ -164,6 +164,8 @@ class BotFramework:
             for button in buttons
         ]
 
+        text = text.replace("__user__", user_name)
+
         hero_content = {
             "contentType": "application/vnd.microsoft.card.hero",
             "content": {"title": text, "buttons": buttons},
