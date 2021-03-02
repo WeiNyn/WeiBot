@@ -142,5 +142,4 @@ models/latest_model/
 venv/
 test_db.db
 .idea/
-main.py
 models/
