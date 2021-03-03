@@ -300,6 +300,7 @@ class ChatStateDB:
     def fetch_users(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Get the latest state of number of users
+
         :param limit: number of user to fetch
         :return: list(dict(id, user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response))
         """

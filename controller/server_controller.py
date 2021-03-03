@@ -189,7 +189,8 @@ class Controller:
         sentences = [user_input]
         predicted_output = self.nlu.predict(sentences)[0]
 
-        intent = dict(name=predicted_output["intent"],
+        intent = dict(text=user_input,
+                      name=predicted_output["intent"],
                       intent_ranking=predicted_output["intent_ranking"])
 
         if intent["name"] not in self.flow_map.actions_map.keys():

@@ -352,6 +352,9 @@ async def change_dataset(intent_name: str, examples: List[Dict[str, Any]]):
                 if entity_name not in DOMAIN["entities"]:
                     DOMAIN["entities"].append(entity_name)
 
+                if entity_name not in NLU_CONFIG["model"]["entities"]:
+                    NLU_CONFIG["model"]["entities"].append(entity_name)
+
     DATASET[intent_name] = examples
 
     return DATASET

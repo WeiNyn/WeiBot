@@ -1,8 +1,7 @@
 model:
   model: /home/weinyn/Documents/ChatbotController/models/latest_model
   tokenizer: /home/weinyn/Documents/ChatbotController/models/latest_model
-  dataset_folder: /home/weinyn/Documents/WeiBot/dataset/dataset_0302_new_greeting
-    function/
+  dataset_folder: /home/weinyn/Documents/WeiBot/dataset/dataset_0302_final/
   exclude_file: null
   entities:
   - working_type
