@@ -1,6 +1,7 @@
 import warnings
 from typing import Optional
 import logging
+from fastapi.logger import logger
 
 from actions.defined_actions import *
 from database.database import ChatStateDB
@@ -165,11 +166,13 @@ class Controller:
 
         self._create_action_dict(base_action_class)
 
+        self.logger = logger
+
         if debug:
-            logging.basicConfig(level=logging.DEBUG)
+            self.logger.setLevel(logging.DEBUG)
 
         else:
-            logging.basicConfig(level=logging.INFO)
+            self.logger.setLevel(logging.INFO)
 
     def _create_action_dict(self, base_action_class):
         """
@@ -254,10 +257,11 @@ class Controller:
         :return: MessageOutput - output to user
         """
 
-        logging.debug(f"""
+        self.logger.debug(f"""
         Main loop started!
         """)
 
+        target_event = None
         # if loop_stack exceeds limit, return default action to user
         if user_state.loop_stack >= 10:
             user_state.events = EventOutput(dict(trigger_intent="default"))
@@ -265,31 +269,31 @@ class Controller:
             user_state.synonym_dict = None
             user_message = None
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             loop_stack exceeds limit: {user_state.loop_stack}
             Events: {user_state.events.__dict__}
             """)
 
         # priority handle button in event
         elif user_state.button is not None and user_message is not None:
-            target_event = None
+            translated_message = user_message
             # handle synonym message first
             if user_state.synonym_dict is not None:
                 for key, value in user_state.synonym_dict.items():
                     if user_message.lower() == key.lower():
 
-                        logging.debug(f"""
+                        self.logger.debug(f"""
                         User message is replaced: {user_message} -> {value}
                         """)
 
-                        user_message = value
+                        translated_message = value
 
             # handle match message
             for key, value in user_state.button.items():
-                if user_message.lower() == key.lower():
+                if translated_message.lower() == key.lower():
                     target_event = value
 
-                    logging.debug(f"""
+                    self.logger.debug(f"""
                     Button event triggered by synonym message: {target_event}
                     """)
 
@@ -305,7 +309,7 @@ class Controller:
                 user_state.synonym_dict = None
                 user_state.loop_stack += 1
 
-                logging.debug(f"""
+                self.logger.debug(f"""
                 User_state changed:
                     Events: {user_state.events.__dict__}
                     Button: None
@@ -313,10 +317,10 @@ class Controller:
                     Loop_stack: {user_state.loop_stack}
                 """)
 
-        elif user_message:
+        if user_message is not None and target_event is None:
             self.translate_user_input(user_input=user_message, user_state=user_state)
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             User message translated:
                 Intent: {user_state.intent}
                 Entities: {user_state.entities}
@@ -326,7 +330,7 @@ class Controller:
         # Each action that using recursive strategies will increase the loop stack
         events = user_state.events.__dict__
 
-        logging.debug(f"""
+        self.logger.debug(f"""
         Events confirm: {events}
         """)
 
@@ -334,7 +338,7 @@ class Controller:
             user_state.events = self.handle_flow(action=events.get("action"), user_state=user_state)
             user_state.loop_stack += 1
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             Trigger action: {events.get("actions", None)}
                 Events: {user_state.events.__dict__}
                 Loop_stack: {user_state.loop_stack}
@@ -345,7 +349,7 @@ class Controller:
         if events.get("set_slot", None) is not None:
             user_state.slots.update(events.get("set_slot"))
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             Set slot events: {events.get("set_slot", None)}
             """)
 
@@ -357,7 +361,7 @@ class Controller:
             del user_state.events.__dict__["text"]
             user_state.response = output
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             Message output: {events.get("text")}
             """)
 
@@ -387,7 +391,7 @@ class Controller:
             user_state.loop_stack += 1
             user_state.events = self.handle_flow(user_state=user_state, trigger_intent=events.get("trigger_intent"))
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             Trigger_intent event: {events.get("trigger_intent")}
                 Events: {user_state.events.__dict__}
                 Loop_stack: {user_state.loop_stack}
@@ -403,7 +407,7 @@ class Controller:
             user_state.loop_stack += 1
             user_state.events = self.handle_flow(user_state=user_state, request_slot=request_slot)
 
-            logging.debug(f"""
+            self.logger.debug(f"""
             Request_slot: {events.get("request_slot", None)}
                 Events: {user_state.events.__dict__}
                 Loop_stack: {user_state.loop_stack}
@@ -413,7 +417,7 @@ class Controller:
 
         user_state.events = self.handle_flow(user_state=user_state)
 
-        logging.debug(f"""
+        self.logger.debug(f"""
         Handle Flow at the end:
             Events: {user_state.events}
         """)
