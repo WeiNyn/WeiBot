@@ -44,7 +44,8 @@ from app.setting.setting import Setting
 nlu: Wrapper = Wrapper(Setting.model_config)
 flow_map: FlowMap = FlowMap(Setting.flow_config, Setting.domain_config)
 controller: Controller = Controller(nlu=nlu, flow_map=flow_map, version=Setting.version,
-                                    base_action_class=Setting.base_action_class)
+                                    base_action_class=Setting.base_action_class,
+                                    debug=Setting.debug)
 
 user_conversations: UserConversations = UserConversations(db=Setting.user_db,
                                                           entities_list=flow_map.entities_list,
