@@ -319,7 +319,7 @@ async def train_model(save_folder: str = None):
     return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
 
 
-@app.get("Model/reload")
+@app.get("/Model/reload")
 async def reload():
     global nlu
     global flow_map
