@@ -1,9 +1,9 @@
+import logging
 import os
 import sys
 from datetime import datetime
 from typing import Optional, Tuple
 
-import logging
 logging.basicConfig(level=logging.ERROR)
 
 from fastapi import FastAPI, Body
@@ -11,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, FileResponse
 from pydantic.main import BaseModel
-
 
 app = FastAPI(host="0.0.0.0")
 
@@ -27,14 +26,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 sys.path.append(os.getcwd())
-
 
 from app.modules.chatbot import Message, send_rest_func, send_bot_framework_func
 from app.modules.ARM import SendData, send_message_func, get_user_func
-from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, change_dataset, remove_dataset, add_qna, remove_qna, save_qna
-from app.modules.DB import get_conversation, get_messages, get_users
+from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, change_dataset, add_qna, remove_qna, save_qna
+from app.modules.DB import get_conversation, get_messages
 
 from controller.server_controller import Controller, UserConversations
 from parsers.flow_map import FlowMap
@@ -43,7 +40,6 @@ from channels.botframework import BotFramework
 from actions.defined_actions import *
 
 from app.setting.setting import Setting
-
 
 nlu: Wrapper = Wrapper(Setting.model_config)
 flow_map: FlowMap = FlowMap(Setting.flow_config, Setting.domain_config)
@@ -57,7 +53,6 @@ user_conversations: UserConversations = UserConversations(db=Setting.user_db,
                                                           user_limit=10)
 
 bot_framework = BotFramework(Setting.app_id, Setting.app_password, Setting.bot)
-
 
 # ARM required socketio setup
 if Setting.arm_on:
@@ -75,7 +70,9 @@ async def send_rest(message: Message):
     global controller
 
     try:
-        output, user_conversations, controller = await send_rest_func(message=message, user_conversations=user_conversations, controller=controller)
+        output, user_conversations, controller = await send_rest_func(message=message,
+                                                                      user_conversations=user_conversations,
+                                                                      controller=controller)
 
     except Exception as ex:
         logging.error(f"Error: Chatbot's rest channel error {ex}")
@@ -91,7 +88,11 @@ async def send_bot_framework(user_input: Dict[str, Any] = Body(...)):
     global bot_framework
 
     try:
-        user_conversations, controller, bot_framework = await send_bot_framework_func(user_input=user_input, user_conversations=user_conversations, controller=controller, bot_framework=bot_framework, sio=sio)
+        user_conversations, controller, bot_framework = await send_bot_framework_func(user_input=user_input,
+                                                                                      user_conversations=user_conversations,
+                                                                                      controller=controller,
+                                                                                      bot_framework=bot_framework,
+                                                                                      sio=sio)
 
     except Exception as ex:
         logging.error(f"Error: Chatbot's botframework channel error {ex}")
@@ -106,7 +107,8 @@ async def send_arm(request: SendData):
     global user_conversations
 
     try:
-        output, bot_framework = await send_message_func(request=request, bot_framework=bot_framework, db=user_conversations.db)
+        output, bot_framework = await send_message_func(request=request, bot_framework=bot_framework,
+                                                        db=user_conversations.db)
 
     except Exception as ex:
         logging.error(f"Error: ARM send message failed {ex}")
@@ -194,13 +196,14 @@ async def change_qna(qna: QNA):
     examples = qna.examples
 
     examples = [dict(
-                    text=ex.text,
-                    entities=[entity.__dict__ for entity in ex.entities]
-                )
-                for ex in examples]
+        text=ex.text,
+        entities=[entity.__dict__ for entity in ex.entities]
+    )
+        for ex in examples]
 
     if working_type is None and text is None:
-        return JSONResponse(jsonable_encoder({"error": "at least working_type or text must be specified"}), status_code=400)
+        return JSONResponse(jsonable_encoder({"error": "at least working_type or text must be specified"}),
+                            status_code=400)
 
     if working_type is not None and text is not None:
         return JSONResponse(jsonable_encoder({"error": "only give working_type or text"}), status_code=400)
@@ -260,10 +263,10 @@ async def change_dataset(dataset: DatasetExamples):
     examples = dataset.examples
 
     examples = [dict(
-                    text=ex.text,
-                    entities=[entity.__dict__ for entity in ex.entities]
-                )
-                for ex in examples]
+        text=ex.text,
+        entities=[entity.__dict__ for entity in ex.entities]
+    )
+        for ex in examples]
 
     try:
         await change_dataset(intent_name=intent, examples=examples)
@@ -279,7 +282,8 @@ async def change_dataset(dataset: DatasetExamples):
 async def get_user(user_id: str):
     try:
         global user_conversations
-        return JSONResponse(jsonable_encoder(await get_conversation(user_conversations.db, user_id=user_id)), status_code=200)
+        return JSONResponse(jsonable_encoder(await get_conversation(user_conversations.db, user_id=user_id)),
+                            status_code=200)
 
     except Exception as ex:
         logging.error(f"get user conversation error {ex}")
@@ -296,3 +300,59 @@ async def fetch_user_messages():
         logging.error(f"get user conversation error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
+
+@app.get("/Model/train")
+async def train_model(save_folder: str = None):
+    if not save_folder:
+        save_folder = f"models/model_{datetime.today().timestamp()}"
+
+    else:
+        save_folder = f"models/{save_folder}"
+
+    try:
+        nlu.train_model(save_folder=save_folder)
+
+    except Exception as ex:
+        logging.error(f"ERROR: Cannot train model {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+
+
+@app.get("Model/reload")
+async def reload():
+    global nlu
+    global flow_map
+    global user_conversations
+    global controller
+
+    try:
+        new_nlu: Wrapper = Wrapper(Setting.model_config)
+        new_flow_map: FlowMap = FlowMap(Setting.flow_config, Setting.domain_config)
+        new_controller: Controller = Controller(nlu=new_nlu, flow_map=new_flow_map, version=Setting.version,
+                                                base_action_class=Setting.base_action_class)
+        new_user_conversations: UserConversations = UserConversations(db=Setting.user_db,
+                                                                      entities_list=new_flow_map.entities_list,
+                                                                      intents_list=new_flow_map.intents_list,
+                                                                      slots_list=new_flow_map.slots_list, user_limit=10)
+
+    except Exception as ex:
+        logging.error(f"ERROR: Cannot reload chatbot {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    try:
+        nlu = None
+        flow_map = None
+        user_conversations = None
+        controller = None
+
+        nlu = new_nlu
+        flow_map = new_flow_map
+        user_conversations = new_user_conversations
+        controller = new_controller
+
+    except Exception as ex:
+        logging.error(f"ERROR: Cannot reload chatbot {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
