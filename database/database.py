@@ -208,6 +208,40 @@ class ChatStateDB:
 
         return chat_state
 
+    def modify_chat_state(self, user_id, select_intent: str) -> bool:
+
+        chat_state = self.fetch_chat_state(user_id=user_id)
+
+        if not chat_state:
+            return False
+
+        intent = chat_state["intent"]
+
+        if intent.get("intent_ranking", None):
+            del intent["intent_ranking"]
+
+        intent["select_intent"] = select_intent
+
+        try:
+            intent = self.convert_dict(json.dumps(intent), dictionary=self.replace_dict())
+
+        except Exception as ex:
+            warnings.warn(f"Cannot convert intent {intent} to text format by error {ex}")
+            return False
+
+        sql_statement = f"""UPDATE chat_state SET intent = '{intent}' WHERE user_id = '{user_id}'"""
+
+        try:
+            c = self.conn.cursor()
+            c.execute(sql_statement)
+            self.conn.commit()
+
+        except Exception as ex:
+            warnings.warn(f"Cannot update data into table with error {ex}")
+            return False
+
+        return True
+
     def fetch_user_messages(self, user_id: str, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Get the user states in database.
