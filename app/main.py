@@ -330,7 +330,8 @@ async def reload():
         new_nlu: Wrapper = Wrapper(Setting.model_config)
         new_flow_map: FlowMap = FlowMap(Setting.flow_config, Setting.domain_config)
         new_controller: Controller = Controller(nlu=new_nlu, flow_map=new_flow_map, version=Setting.version,
-                                                base_action_class=Setting.base_action_class)
+                                                base_action_class=Setting.base_action_class,
+                                                debug=Setting.debug)
         new_user_conversations: UserConversations = UserConversations(db=Setting.user_db,
                                                                       entities_list=new_flow_map.entities_list,
                                                                       intents_list=new_flow_map.intents_list,

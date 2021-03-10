@@ -1,6 +1,8 @@
 from actions.actions import BaseActionClass
 
 class Setting:
+    debug = False
+
     model_config = "/home/weinyn/Documents/WeiBot/config/config.yml"
     flow_config = "/home/weinyn/Documents/WeiBot/config/final_config.yml"
     domain_config = "/home/weinyn/Documents/WeiBot/config/domain.yml"
