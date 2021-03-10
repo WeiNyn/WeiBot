@@ -1,9 +1,9 @@
 from actions.actions import BaseActionClass
 
 class Setting:
-    model_config = "/home/weinyn/Documents/WeiBot/config/config.yml"
-    flow_config = "/home/weinyn/Documents/WeiBot/config/final_config.yml"
-    domain_config = "/home/weinyn/Documents/WeiBot/config/domain.yml"
+    model_config = "config/config.yml"
+    flow_config = "config/final_config.yml"
+    domain_config = "config/domain.yml"
 
     app_id = "c072edf3-5800-4c7b-939a-107508981bf0"
     app_password = "~gKRJs8q..l32CgS-4WD84Zej-Dl8.p5bo"
@@ -20,10 +20,10 @@ class Setting:
 
     arm_on = True
     arm_socket = "http://10.0.0.100:8088"
-    host_link = "https://6d7fdc5abf76.ap.ngrok.io"
-    images_path = "/home/weinyn/Documents/WeiBot/app/images"
+    host_link = "http://bf34aef733a4.ap.ngrok.io"
+    images_path = "WeiBot/app/images"
 
-    default_config_path = "/home/weinyn/Documents/WeiBot/config/default_config.yml"
-    high_level_config_path = "/home/weinyn/Documents/WeiBot/config/high_level_config.yml"
-    config_path = "/home/weinyn/Documents/WeiBot/config/"
+    default_config_path = "config/default_config.yml"
+    high_level_config_path = "config/high_level_config.yml"
+    config_path = "config/"
 
