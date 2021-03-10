@@ -1,11 +1,8 @@
 from actions.actions import BaseActionClass
 
 class Setting:
-<<<<<<< HEAD
-=======
     debug = False
 
->>>>>>> origin/develop
     model_config = "config/config.yml"
     flow_config = "config/final_config.yml"
     domain_config = "config/domain.yml"
@@ -25,13 +22,8 @@ class Setting:
 
     arm_on = True
     arm_socket = "http://10.0.0.100:8088"
-<<<<<<< HEAD
     host_link = "http://bf34aef733a4.ap.ngrok.io"
     images_path = "WeiBot/app/images"
-=======
-    host_link = "https://6d7fdc5abf76.ap.ngrok.io"
-    images_path = "app/images"
->>>>>>> origin/develop
 
     default_config_path = "config/default_config.yml"
     high_level_config_path = "config/high_level_config.yml"
