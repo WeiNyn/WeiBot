@@ -129,6 +129,18 @@ class EntityCondition(Condition):
                         check_condition = False
                         break
 
+            if entity_value is True:
+                found_flag = False
+                for entity in entities:
+                    if entity.get("entity_name") == entity_name:
+                        if entity.get("text", None) is not None:
+                            found_flag = True
+                            break
+
+                if found_flag is False:
+                    check_condition = False
+                    break
+
             if check_condition is False:
                 break
 
@@ -156,7 +168,7 @@ class IntentCondition(Condition):
             raise ValueError(f"Only support dictionary type for intent condition, not {self.intent}: {type(self.intent)}")
 
         for check_type, check_value in self.intent.items():
-            if check_type == "intent_name":
+            if check_type == "name":
                 if check_value not in intents_list:
                     raise ValueError(f"Intent {check_value} is not an available intent")
 
@@ -173,7 +185,7 @@ class IntentCondition(Condition):
         check_condition = True
 
         for check_type, check_value in self.intent.items():
-            if check_type == "intent_name":
+            if check_type == "name":
                 if intent != check_value:
                     check_condition = False
                     return check_condition
