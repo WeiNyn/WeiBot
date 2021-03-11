@@ -29,3 +29,4 @@ class Setting:
     high_level_config_path = "config/high_level_config.yml"
     config_path = "config/"
     model_path = "models/"
+    dataset_path = "dataset/"

@@ -443,7 +443,7 @@ async def save_dataset(folder_name: str = None):
         if not folder_name.endswith("/"):
             folder_name = f"{folder_name}/"
 
-    base_dir = "/home/weinyn/Documents/WeiBot/dataset/"
+    base_dir = Setting.dataset_path
     dataset_dir = os.path.join(base_dir, folder_name)
 
     if os.path.isdir(dataset_dir):
