@@ -547,7 +547,7 @@ async def set_model(model: str):
     :return: True if successful
     """
 
-    model_list = get_model_list()
+    model_list = await get_model_list()
     if model not in model_list:
         raise ValueError(f"{model} is not an available model")
 
