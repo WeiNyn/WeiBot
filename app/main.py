@@ -30,7 +30,7 @@ sys.path.append(os.getcwd())
 
 from app.modules.chatbot import Message, send_rest_func, send_bot_framework_func
 from app.modules.ARM import SendData, send_message_func, get_user_func
-from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, change_dataset, add_qna, remove_qna, save_qna
+from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, MODEL_LIST, change_dataset, add_qna, remove_qna, save_qna, get_model_list, set_model
 from app.modules.DB import get_conversation, get_messages
 
 from controller.server_controller import Controller, UserConversations
@@ -54,6 +54,7 @@ user_conversations: UserConversations = UserConversations(db=Setting.user_db,
                                                           user_limit=10)
 
 bot_framework = BotFramework(Setting.app_id, Setting.app_password, Setting.bot)
+
 
 # ARM required socketio setup
 if Setting.arm_on:
@@ -305,10 +306,10 @@ async def fetch_user_messages():
 @app.get("/Model/train")
 async def train_model(save_folder: str = None):
     if not save_folder:
-        save_folder = f"models/model_{datetime.today().timestamp()}"
+        save_folder = os.path.join(Setting.model_path, f"model_{datetime.today().timestamp()}")
 
     else:
-        save_folder = f"models/{save_folder}"
+        save_folder = os.path.join(Setting.model_path, save_folder)
 
     try:
         nlu.train_model(save_folder=save_folder)
@@ -358,3 +359,28 @@ async def reload():
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
     return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+
+
+@app.get("/Model/model_list")
+async def fetch_model_list():
+    try:
+        model_list = await get_model_list()
+
+    except Exception as ex:
+        logging.error(f"ERROR: Cannot fetch model list {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    return JSONResponse(jsonable_encoder(model_list), status_code=200)
+
+
+@app.post("/Model/select_model")
+async def select_model(model: str):
+    try:
+        result = await set_model(model=model)
+
+    except Exception as ex:
+        logging.error(f"ERROR: Cannot select model {model} by error {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+
