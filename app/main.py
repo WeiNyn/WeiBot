@@ -83,6 +83,32 @@ async def send_rest(message: Message):
     return JSONResponse(jsonable_encoder(output), status_code=200)
 
 
+@app.post("/webhook/blueprint/")
+async def send_from_blueprint(message: Message):
+    global user_conversations
+    global controller
+
+    try:
+        output, user_conversations, controller = await send_rest_func(message=message,
+                                                                      user_conversations=user_conversations,
+                                                                      controller=controller)
+
+    except Exception as ex:
+        logging.error(f"Error: Chatbot's rest channel error {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    blueprint_output = dict(
+        recipient_id=message.user_id,
+        text=output.get("text", ""),
+        buttons=[dict(
+            title=b,
+            payload=b
+        ) for b in output.get("button", [])]
+    )
+
+    return JSONResponse(jsonable_encoder(blueprint_output), status_code=200)
+
+
 @app.post("/chatbot/botframework/")
 async def send_bot_framework(user_input: Dict[str, Any] = Body(...)):
     global user_conversations
