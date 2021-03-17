@@ -28,4 +28,5 @@ class Setting:
     default_config_path = "config/default_config.yml"
     high_level_config_path = "config/high_level_config.yml"
     config_path = "config/"
-
+    model_path = "models/"
+    dataset_path = "dataset/"

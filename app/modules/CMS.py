@@ -36,6 +36,8 @@ NLU_CONFIG_PATH = Setting.model_config
 with open(NLU_CONFIG_PATH, "r") as nlu_config_file:
     NLU_CONFIG = yaml.load(nlu_config_file, Loader=yaml.FullLoader)
 
+MODEL_LIST = [f for f in os.listdir(Setting.model_path) if os.path.isdir(os.path.join(Setting.model_path, f))]
+
 
 async def check_high_level_config(data: Dict[str, Any]):
     """
@@ -441,7 +443,7 @@ async def save_dataset(folder_name: str = None):
         if not folder_name.endswith("/"):
             folder_name = f"{folder_name}/"
 
-    base_dir = "/home/weinyn/Documents/WeiBot/dataset/"
+    base_dir = Setting.dataset_path
     dataset_dir = os.path.join(base_dir, folder_name)
 
     if os.path.isdir(dataset_dir):
@@ -522,3 +524,35 @@ async def save_qna(dataset_folder: str):
 
     create_version(nlu_config=NLU_CONFIG_PATH, high_level_config=HIGH_LEVEL_CONFIG_PATH, save_file=FLOW_CONFIG_PATH)
 
+
+async def get_model_list() -> List[str]:
+    """
+    Re-construct model_list
+
+    :return: list(str) - a list of available models
+    """
+    global MODEL_LIST
+
+    list_dir = [f for f in os.listdir(Setting.model_path) if os.path.isdir(os.path.join(Setting.model_path, f))]
+    MODEL_LIST = list_dir
+
+    return list_dir
+
+
+async def set_model(model: str):
+    """
+    Select model for chatbot
+
+    :param model: str - name of model
+    :return: True if successful
+    """
+
+    model_list = await get_model_list()
+    if model not in model_list:
+        raise ValueError(f"{model} is not an available model")
+
+    global NLU_CONFIG
+    NLU_CONFIG["model"]["model"] = os.path.join(Setting.model_path, model)
+    NLU_CONFIG["model"]["tokenizer"] = os.path.join(Setting.model_path, model)
+
+    return True
