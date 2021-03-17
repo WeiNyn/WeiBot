@@ -31,6 +31,7 @@ class ConversationState:
                  synonym_dict: Dict[str, str] = None):
         """
         Create ConversationState
+
         :param user_id: str - unique identifier of user
         :param user_name: str - name of user
         :param version: str- version of system
@@ -70,6 +71,7 @@ class ConversationState:
     def _check(self, entities_list: List[str], intents_list: List[str], slots_list: List[str]):
         """
         Validate information and create needed attribute
+
         :param entities_list: list(str) - list of available entities
         :param intents_list: list(str) - list of available intents
         :param slots_list: list(str) - list of available slots
@@ -117,6 +119,7 @@ class ConversationState:
     def export(self) -> Dict[str, Any]:
         """
         Export to dictionary for saving to db
+
         :return: dict(str, any)
         """
         return dict(
@@ -151,7 +154,7 @@ class Controller:
                  flow_map: FlowMap,
                  version: str,
                  base_action_class=BaseActionClass,
-                 debug: bool=False):
+                 debug: bool = False):
         """
         Create controller
         :param nlu: DIETClassifierWrapper - the nlu pipeline for chatbot
@@ -177,6 +180,7 @@ class Controller:
     def _create_action_dict(self, base_action_class):
         """
         Create a dynamic actions dictionary based on the python module
+
         :param base_action_class: class name - Base action class for custom actions
         :return: None
         """
@@ -491,10 +495,11 @@ class UserConversations:
         else:
             warnings.warn(f"user {user_id} not in user_queue")
 
-    def load_user(self, user_id: str, user_name):
+    def load_user(self, user_id: str, user_name: str):
         """
         Load the specified user from db
         :param user_id: str - id of user
+        :param user_name: str - name of user
         :return: None
         """
         if self.user_queue.get(user_id, None) is not None:
