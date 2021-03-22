@@ -176,7 +176,16 @@ async def get_img(floor: str, timestamp: str):
 
 @app.get("/CMS/qna")
 async def get_qna():
-    return JSONResponse(jsonable_encoder(HIGH_LEVEL_CONFIG))
+    high_level_config = HIGH_LEVEL_CONFIG.copy()
+    intents_map = high_level_config["intents_map"]
+    dataset = DATASET.copy()
+
+    for index, intent_map in enumerate(intents_map):
+        intents_map[index].update({"examples": dataset.get(intent_map["intent"], [])})
+
+    high_level_config["intents_map"] = intents_map
+
+    return JSONResponse(jsonable_encoder(high_level_config))
 
 
 @app.get("/CMS/nlu_config")
