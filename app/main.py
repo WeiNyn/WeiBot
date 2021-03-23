@@ -317,12 +317,14 @@ async def change_dataset(dataset: DatasetExamples):
 
 
 class AddDataset(BaseModel):
+    id: int
     intent: str
     example: Example
 
 
 @app.post("/CMS/add_dataset")
 async def add_dataset_func(message: AddDataset):
+    message_id = message.id
     intent = message.intent
     example = dict(
         text=message.example.text,
@@ -331,6 +333,7 @@ async def add_dataset_func(message: AddDataset):
 
     try:
         await add_dataset(intent_name=intent, example=example)
+        await modify_message(user_conversations.db, id=message_id, select_intent=intent)
 
     except Exception as ex:
         logging.error("Cannot add message dataset by error {ex}")
