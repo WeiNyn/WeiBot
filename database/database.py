@@ -2,7 +2,7 @@ import json
 import sqlite3
 import warnings
 from datetime import datetime
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Optional
 
 
 class ChatStateDB:
@@ -208,9 +208,16 @@ class ChatStateDB:
 
         return chat_state
 
-    def modify_chat_state(self, user_id, select_intent: str) -> bool:
+    def modify_chat_state(self, message_id: int, select_intent: str) -> bool:
+        """
+        Modify the intent of message
 
-        chat_state = self.fetch_chat_state(user_id=user_id)
+        :param message_id: int - id of message
+        :param select_intent: str - the selected intent
+        :return: bool
+        """
+
+        chat_state = self.fetch_message(message_id=message_id)
 
         if not chat_state:
             return False
@@ -229,7 +236,7 @@ class ChatStateDB:
             warnings.warn(f"Cannot convert intent {intent} to text format by error {ex}")
             return False
 
-        sql_statement = f"""UPDATE chat_state SET intent = '{intent}' WHERE user_id = '{user_id}'"""
+        sql_statement = f"""UPDATE chat_state SET intent = '{intent}' WHERE id = '{message_id}'"""
 
         try:
             c = self.conn.cursor()
@@ -291,6 +298,7 @@ class ChatStateDB:
     def fetch_all_messages(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Get the messages from all user
+
         :param limit: number of query row
         :return: list(dict(id, user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response))
         """
@@ -302,7 +310,7 @@ class ChatStateDB:
 
         except Exception as ex:
             result = 0
-            warnings.warn(f"Cannot fetch chat state by error {ex}")
+            warnings.warn(f"Cannot fetch messages by error {ex}")
 
         messages = []
         for row in result:
@@ -331,6 +339,50 @@ class ChatStateDB:
 
         return messages
 
+    def fetch_message(self, message_id: int) -> Optional[Dict[str, Any]]:
+        """
+        Get the messages by id
+
+        :param message_id: int - id of message
+        :return: dict(id, user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response)
+        """
+        sql_statement = f"""SELECT * FROM chat_state WHERE id = {message_id}"""
+
+        try:
+            c = self.conn.cursor()
+            result = c.execute(sql_statement).fetchall()
+
+        except Exception as ex:
+            result = 0
+            warnings.warn(f"Cannot fetch message by error {ex}")
+
+        row = result[0]
+        output = None
+        try:
+            intent, entities, slots, events, button, response, synonym_dict = self.load_data(row[4], row[6], row[5],
+                                                                                             row[8], row[9],
+                                                                                             row[11], row[12])
+            output = dict(
+                id=row[0],
+                user_id=row[1],
+                user_name=row[2],
+                version=row[3],
+                intent=intent,
+                slots=slots,
+                entities=entities,
+                timestamp=row[7],
+                events=events,
+                button=button,
+                loop_stack=row[10],
+                response=response,
+                synonym_dict=synonym_dict
+            )
+
+        except Exception as ex:
+            warnings.warn(f"Cannot convert intent/entities/slots from text format by error {ex}")
+
+        return output
+
     def fetch_users(self, limit: int = 100) -> List[Dict[str, Any]]:
         """
         Get the latest state of number of users
@@ -339,9 +391,9 @@ class ChatStateDB:
         :return: list(dict(id, user_id, version, intent, slots, entities, timestamp, events, button, loop_stack, response))
         """
         sql_statement = f"""SELECT MAX(id) AS [id], user_id, version, intent, slots, entities, timestamp, events, button
-                            FROM chat_state
-                            GROUP BY user_id
-                            LIMIT {limit}"""
+                                FROM chat_state
+                                GROUP BY user_id
+                                LIMIT {limit}"""
 
         try:
             c = self.conn.cursor()
@@ -378,10 +430,11 @@ class ChatStateDB:
 
         return messages
 
+
     def get_user_status(self, user_id) -> Dict[str, Any]:
         sql_statement = f"""SELECT * FROM user_status 
-                                    WHERE user_id = '{user_id}'
-                                    ORDER BY id DESC LIMIT 1"""
+                                        WHERE user_id = '{user_id}'
+                                        ORDER BY id DESC LIMIT 1"""
 
         try:
             c = self.conn.cursor()
@@ -407,6 +460,7 @@ class ChatStateDB:
 
         return status
 
+
     def change_user_status(self, user_id: str, user_name: str, u2u: bool, floor: str):
         current_status = self.get_user_status(user_id=user_id)
 
@@ -423,6 +477,7 @@ class ChatStateDB:
 
         except Exception as ex:
             raise RuntimeWarning(f"Cannot insert data into table with error {ex}")
+
 
     def fetch_arm_status(self) -> List[Dict[str, Any]]:
         """
@@ -451,7 +506,7 @@ class ChatStateDB:
                     u2u=row[3],
                     timestamp=row[4],
                     floor=row[5]
-            ))
+                ))
 
             except Exception as ex:
                 warnings.warn(f"Cannot convert arm status format by error {ex}")

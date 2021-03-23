@@ -29,6 +29,12 @@ async def get_messages(db: ChatStateDB, limit: int = 300) -> List[Dict[str, Any]
     return messages
 
 
+async def modify_message(db: ChatStateDB, id: int, select_intent: str):
+    result = db.modify_chat_state(id, select_intent)
+
+    return result
+
+
 async def get_users(db: ChatStateDB, limit: int = 100) -> List[Dict[str, Any]]:
     users = db.fetch_users(limit=limit)
 

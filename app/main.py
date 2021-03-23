@@ -31,7 +31,7 @@ sys.path.append(os.getcwd())
 from app.modules.chatbot import Message, send_rest_func, send_bot_framework_func
 from app.modules.ARM import SendData, send_message_func, get_user_func
 from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, MODEL_LIST, change_dataset, add_qna, remove_qna, save_qna, get_model_list, set_model
-from app.modules.DB import get_conversation, get_messages
+from app.modules.DB import get_conversation, get_messages, modify_message
 
 from controller.server_controller import Controller, UserConversations
 from parsers.flow_map import FlowMap
@@ -336,6 +336,30 @@ async def fetch_user_messages():
     except Exception as ex:
         logging.error(f"get user conversation error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+
+class SelectIntent(BaseModel):
+    id: int
+    intent: str
+
+
+@app.post("/DB/select_intent")
+async def select_intent(s_intent: SelectIntent):
+    message_id = s_intent.id
+    intent = s_intent.intent
+    try:
+        global user_conversations
+        result = await modify_message(user_conversations.db, id=message_id, select_intent=intent)
+
+    except Exception as ex:
+        logging.error(f"modify message error {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    if result:
+        return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
+
+    else:
+        return JSONResponse(jsonable_encoder({"error": "Cannot modify message"}), status_code=500)
 
 
 @app.get("/Model/train")
