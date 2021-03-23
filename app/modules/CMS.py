@@ -324,6 +324,42 @@ def load_dataset():
 
 DATASET = load_dataset()
 
+async def add_dataset(intent_name: str, example: Dict[str, Any]):
+    """
+    add new message to dataset
+
+    :param intent_name: str - name of intent
+    :param example: dict() - example message
+    :return:
+    """
+    global DOMAIN
+    global NLU_CONFIG
+    global DATASET
+
+    intent_list = DOMAIN["intents"]
+
+    if intent_name not in intent_list:
+        DOMAIN["intents"].append(intent_name)
+        NLU_CONFIG["model"]["intents"].append(intent_name)
+        DATASET[intent_name] = []
+
+    entities = example.get("entities")
+    for ent in entities:
+        entity_name = ent.get("entity_name", None)
+        if not entity_name:
+            warnings.warn(f"entity_name must be specified, ignore the {entity_name} entity_name")
+
+        else:
+            if entity_name not in DOMAIN["entities"]:
+                DOMAIN["entities"].append(entity_name)
+
+            if entity_name not in NLU_CONFIG["model"]["entities"]:
+                NLU_CONFIG["model"]["entities"].append(entity_name)
+
+    DATASET[intent_name].append(example)
+
+    return DATASET
+
 
 async def change_dataset(intent_name: str, examples: List[Dict[str, Any]]):
     """

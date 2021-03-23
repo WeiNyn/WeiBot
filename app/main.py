@@ -30,7 +30,8 @@ sys.path.append(os.getcwd())
 
 from app.modules.chatbot import Message, send_rest_func, send_bot_framework_func
 from app.modules.ARM import SendData, send_message_func, get_user_func
-from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, MODEL_LIST, change_dataset, add_qna, remove_qna, save_qna, get_model_list, set_model
+from app.modules.CMS import HIGH_LEVEL_CONFIG, NLU_CONFIG, DATASET, MODEL_LIST, change_dataset, add_qna, remove_qna, \
+    save_qna, get_model_list, set_model, add_dataset
 from app.modules.DB import get_conversation, get_messages, modify_message
 
 from controller.server_controller import Controller, UserConversations
@@ -310,6 +311,29 @@ async def change_dataset(dataset: DatasetExamples):
 
     except Exception as ex:
         logging.error(f"Error: chagne dataset error {ex}")
+        return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
+
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
+
+
+class AddDataset(BaseModel):
+    intent: str
+    example: Example
+
+
+@app.post("/CMS/add_dataset")
+async def add_dataset_func(message: AddDataset):
+    intent = message.intent
+    example = dict(
+        text=message.example.text,
+        entities=[entity.__dict__ for entity in message.example.entities]
+    )
+
+    try:
+        await add_dataset(intent_name=intent, example=example)
+
+    except Exception as ex:
+        logging.error("Cannot add message dataset by error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
     return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
