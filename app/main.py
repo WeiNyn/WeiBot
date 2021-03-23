@@ -126,7 +126,7 @@ async def send_bot_framework(user_input: Dict[str, Any] = Body(...)):
         logging.error(f"Error: Chatbot's botframework channel error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 @app.post("/ARM/send/")
@@ -262,7 +262,7 @@ async def change_qna(qna: QNA):
         logging.error(f"Error: Change qna error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 @app.post("/CMS/remove_qna")
@@ -274,7 +274,7 @@ async def rm_qna(intent_name: str):
         logging.error(f"Error: Remove QnA error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 @app.post("/CMS/save_qna")
@@ -286,7 +286,7 @@ async def save(dataset_folder: str):
         logging.error(f"Error: Save QnA error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 class DatasetExamples(BaseModel):
@@ -312,7 +312,7 @@ async def change_dataset(dataset: DatasetExamples):
         logging.error(f"Error: chagne dataset error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 @app.post("/DB/user_conversation")
@@ -353,7 +353,7 @@ async def train_model(save_folder: str = None):
         logging.error(f"ERROR: Cannot train model {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 @app.get("/Model/reload")
@@ -393,7 +393,7 @@ async def reload():
         logging.error(f"ERROR: Cannot reload chatbot {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
 @app.get("/Model/model_list")
@@ -417,5 +417,5 @@ async def select_model(model: str):
         logging.error(f"ERROR: Cannot select model {model} by error {ex}")
         return JSONResponse(jsonable_encoder({"error": str(ex)}), status_code=500)
 
-    return JSONResponse(jsonable_encoder({"status": "success"}), status_code=200)
+    return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
