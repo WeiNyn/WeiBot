@@ -346,7 +346,10 @@ async def add_dataset_func(message: AddDataset):
 async def get_user(user_id: str):
     try:
         global user_conversations
-        return JSONResponse(jsonable_encoder(await get_conversation(user_conversations.db, user_id=user_id)),
+
+        conversation = await get_conversation(user_conversations.db, user_id=user_id)
+        conversation = conversation[::-1]
+        return JSONResponse(jsonable_encoder(conversation),
                             status_code=200)
 
     except Exception as ex:
