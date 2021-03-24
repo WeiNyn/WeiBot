@@ -101,9 +101,6 @@ async def write_high_level_config(data: Dict[str, Any]):
     except Exception as ex:
         raise RuntimeError(f"Cannot save config to file {HIGH_LEVEL_CONFIG_PATH} by error {ex}")
 
-    global HIGH_LEVEL_CONFIG
-    HIGH_LEVEL_CONFIG = await load_high_level_config()
-
 
 async def load_domain():
     """
@@ -133,9 +130,6 @@ async def write_domain(data: Dict[str, Any]):
 
     except Exception as ex:
         raise RuntimeError(f"Cannot write domain to file {DOMAIN_CONFIG_PATH} by error {ex}")
-
-    global DOMAIN
-    DOMAIN = await load_domain()
 
 
 async def load_model_config():
@@ -167,9 +161,6 @@ async def write_model_config(data: Dict[str, Any]):
 
     except Exception as ex:
         raise RuntimeError(f"Cannot write model config to file {NLU_CONFIG_PATH} by error {ex}")
-
-    global NLU_CONFIG
-    NLU_CONFIG = await load_model_config()
 
 
 async def add_high_level_config(intent: Dict[str, Any]):
@@ -554,9 +545,13 @@ async def save_qna(dataset_folder: str):
     global DOMAIN
     global NLU_CONFIG
 
-    await write_high_level_config(data=HIGH_LEVEL_CONFIG)
-    await write_domain(data=DOMAIN)
-    await write_model_config(data=NLU_CONFIG)
+    high_level_config = HIGH_LEVEL_CONFIG.copy()
+    domain = DOMAIN.copy()
+    nlu_config = NLU_CONFIG.copy()
+
+    await write_high_level_config(data=high_level_config)
+    await write_domain(data=domain)
+    await write_model_config(data=nlu_config)
 
     create_version(nlu_config=NLU_CONFIG_PATH, high_level_config=HIGH_LEVEL_CONFIG_PATH, save_file=FLOW_CONFIG_PATH)
 
