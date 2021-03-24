@@ -462,7 +462,7 @@ async def fetch_model_list():
     return JSONResponse(jsonable_encoder(model_list), status_code=200)
 
 
-@app.post("/Model/select_model")
+@app.get("/Model/select_model")
 async def select_model(model: str):
     try:
         result = await set_model(model=model)
