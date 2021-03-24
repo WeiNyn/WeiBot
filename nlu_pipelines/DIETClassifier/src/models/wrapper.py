@@ -229,6 +229,10 @@ class DIETClassifierWrapper:
 
         self.save_pretrained(directory=save_folder)
 
+        del trainer
+        del dataset
+        torch.cuda.empty_cache()
+
 
 if __name__ == "__main__":
     config_file = "src/config.yml"
