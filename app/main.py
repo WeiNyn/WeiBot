@@ -402,6 +402,7 @@ async def train_model(save_folder: str = None):
 
     try:
         nlu.train_model(save_folder=save_folder)
+        await reload()
 
     except Exception as ex:
         logging.error(f"ERROR: Cannot train model {ex}")
@@ -410,7 +411,6 @@ async def train_model(save_folder: str = None):
     return JSONResponse(jsonable_encoder({"result": "success"}), status_code=200)
 
 
-@app.get("/Model/reload")
 async def reload():
     global nlu
     global flow_map
