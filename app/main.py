@@ -465,7 +465,8 @@ async def fetch_model_list():
 @app.get("/Model/select_model")
 async def select_model(model: str):
     try:
-        result = await set_model(model=model)
+        await set_model(model=model)
+        await reload()
 
     except Exception as ex:
         logging.error(f"ERROR: Cannot select model {model} by error {ex}")
