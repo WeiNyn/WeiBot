@@ -201,7 +201,7 @@ class Controller:
         :param user_state: ConversationState - the current state of conversation
         :return:
         """
-        sentences = [user_input]
+        sentences = [user_input.lower()]
         predicted_output = self.nlu.predict(sentences)[0]
 
         intent = dict(text=user_input,
