@@ -73,27 +73,31 @@ class Setting:
 Please install all requirements before running server
 
 ```sh
-uvicorn main:app --port 5004 --host 0.0.0.0
+uvicorn app.main:app --port 5004 --host 0.0.0.0
 ```
 
-Check the live document for API at: http://localhost:8888/docs
+Check the live document for API at: http://localhost:5004/docs
 
 ## Chatbot config
 
-Please create your own bot service on Microsoft Azure service, and then put your bot app_id and password in the Setting.
+Please create your own bot service on Microsoft Azure service, and then put your bot _app_id_ and _password_ in the Setting.
 Set the endpoint of bot service to the https link to the server:
-http://<server-address>/chatbot/botframework
+
+http://[server-address]/chatbot/botframework
 
 ## Imrpovement Note
 
 You can make a custom chatbot with new rule by changing the conversation config and put dataset for training new NLU model.
+
 You can use ngrok to make an temporary https link to your server (re-create each time the ngrok server stop)
 
 ## For intermal use only
 
 The RTX 3090 do not support torch at the current time, so you must install the compatible version of torch
-You can use the '/HuyNguyen/venv/' environment, I have install all the necessary packages
-All the route that related to CMS and ARM has been confirm and use by MR. Huy Thach, this server is backend for these application.
+
+You can use the '/HuyNguyen/venv/' environment, I installed all the necessary packages
+
+All the route that related to CMS and ARM was confirmed and used by MR. Huy Thach, this server is backend for these application.
 
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
