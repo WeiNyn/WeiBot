@@ -20,7 +20,7 @@ class Setting:
 
     base_action_class = BaseActionClass
 
-    arm_on = True
+    arm_on = False
     arm_socket = "http://10.0.0.100:8088"
     host_link = "http://bf34aef733a4.ap.ngrok.io"
     images_path = "WeiBot/app/images"
